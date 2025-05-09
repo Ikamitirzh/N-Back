@@ -6,8 +6,11 @@
 :root {
   --background: #ffffff;
   --foreground: #171717;
-  --admin-login-btn: #7AA1DD;
+  --admin-login-tab: #7AA1DD;
   --admin-login-text: #1B4E9E;
+  --admin-login-btn: #E5E7EB;
+  --admin-login-btn-hover: #2262C6;
+  --Primary-base: #2262C6;
   
 }
 
