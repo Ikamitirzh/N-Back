@@ -34,3 +34,29 @@ body {
   font-family: Arial, Helvetica, sans-serif;
   
 }
+
+
+
+/* styles/globals.css */
+.icon-container {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  background-color: #FFD700; /* رنگ پس زمینه ایکون‌ها (مشابه عکس) */
+  margin-right: 8px;
+}
+
+.icon-edit {
+  fill: #000; /* رنگ ایکون ویرایش */
+}
+
+.icon-view {
+  fill: #000; /* رنگ ایکون مشاهده */
+}
+
+.icon-delete {
+  fill: #000; /* رنگ ایکون حذف */
+}
