@@ -18,7 +18,7 @@ axios.interceptors.request.use(
 // ۱. نمایش لیست مدارس
 export const fetchSchools = async (filters) => {
   try {
-    
+    console.log(`فیلتر ها ${filters.level}`)
     const response = await axios.get(`${BASE_URL}/api/v1/admin/Schools`, { params: filters });
     
     return response.data;
@@ -31,7 +31,7 @@ export const fetchSchools = async (filters) => {
 // ۲. افزودن مدرسه جدید
 export const addSchool = async (schoolData) => {
   try {
-    const response = await axios.post(`${BASE_URL}/api/v1/admin/School`, schoolData);
+    const response = await axios.post(`${BASE_URL}/api/v1/admin/Schools`, schoolData);
     return response.data;
   } catch (error) {
     console.error("Error adding school:", error);
@@ -43,7 +43,7 @@ export const addSchool = async (schoolData) => {
 export const getSchoolDetails = async (id) => {
   console.log(id)
   try {
-    const response = await axios.get(`${BASE_URL}/api/v1/admin/School/${id}`);
+    const response = await axios.get(`${BASE_URL}/api/v1/admin/Schools/${id}`);
     console.log(response.data)
     return response.data;
   } catch (error) {
@@ -55,7 +55,7 @@ export const getSchoolDetails = async (id) => {
 // ۴. ویرایش مدرسه
 export const updateSchool = async (schoolId, updatedData) => {
   try {
-    const response = await axios.put(`${BASE_URL}/api/v1/admin/School/${schoolId}`, updatedData);
+    const response = await axios.put(`${BASE_URL}/api/v1/admin/Schools/${schoolId}`, updatedData);
     return response.data;
   } catch (error) {
     console.error("Error updating school:", error);
@@ -66,7 +66,7 @@ export const updateSchool = async (schoolId, updatedData) => {
 // ۵. حذف مدرسه
 export const deleteSchool = async (schoolId) => {
   try {
-    const response = await axios.delete(`${BASE_URL}/api/v1/admin/School/${schoolId}`);
+    const response = await axios.delete(`${BASE_URL}/api/v1/admin/Schools/${schoolId}`);
     return response.data;
   } catch (error) {
     console.error("Error deleting school:", error);

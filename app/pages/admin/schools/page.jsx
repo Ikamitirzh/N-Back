@@ -1,4 +1,3 @@
-// pages/school-management.js
 "use client";
 import React, { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
@@ -11,6 +10,7 @@ import Sidebar from "../../../../components/admin/Sidebar";
 import Header from "../../../../components/admin/Header";
 import { useAuth } from "../../../../hooks/useAuth";
 import Pagination from "../../../../components/ui/Pagination";
+import ComboBox from "../../../../components/ComboBox";
 
 export default function SchoolManagementPage() {
   const router = useRouter();
@@ -18,10 +18,11 @@ export default function SchoolManagementPage() {
   const [filters, setFilters] = useState({
     'Pagination.PageIndex': 1,
     'Pagination.PageSize': 7,
-    cityNameId: 0,
-    level: 0,
+    Level: 0,
+    cityId: null,
+    cityName: "",
   });
-  console.log(`فیلتر ${filters.level}`)
+
   const [searchQuery, setSearchQuery] = useState("");
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
@@ -29,27 +30,19 @@ export default function SchoolManagementPage() {
   const [selectedSchool, setSelectedSchool] = useState(null);
   const [newSchool, setNewSchool] = useState({
     name: "",
-    level: "",
-    cityName: "",
+    address: "",
     postalCode: "",
     telNumber: "",
-    address: "",
+    level: 0, // مقدار اولیه رو به 0 تغییر دادیم
+    provinceId: 0,
+    cityId: 0,
   });
-
-  console.log(schools)
-  console.log(searchQuery)
-
-  // const { login } = useAuth();
-
-  // State برای Pagination
+ 
   const [totalPages, setTotalPages] = useState(1);
   const [currentPage, setCurrentPage] = useState(filters['Pagination.PageIndex']);
 
-  // Fetch schools
   const fetchSchoolsData = async () => {
     try {
-      // await login("CogniAdmin", "finalproject"); // یوزرنیم و پسورد واقعی رو جایگزین کن
-      
       const response = await fetchSchools({ ...filters, SearchTerm: searchQuery });
       setSchools(response.items);
       setTotalPages(Math.ceil(response.totalCount / filters['Pagination.PageSize']));
@@ -59,29 +52,35 @@ export default function SchoolManagementPage() {
     }
   };
 
-  // Add a new school
   const handleAddSchool = async () => {
     try {
-      await addSchool(newSchool);
+      const schoolToSend = {
+        name: newSchool.name,
+        address: newSchool.address,
+        postalCode: newSchool.postalCode,
+        telNumber: newSchool.telNumber,
+        level: parseInt(newSchool.level) || 0, // مطمئن می‌شیم که یه عدد معتبر باشه
+        provinceId: parseInt(newSchool.provinceId) || null,
+        cityId: parseInt(newSchool.cityId) || null,
+      };
+      await addSchool(schoolToSend);
       setIsAddModalOpen(false);
-      setNewSchool({
-        name: "",
-        level: "",
-        cityName: "",
-        postalCode: "",
-        telNumber: "",
-        address: "",
-      });
       fetchSchoolsData();
     } catch (error) {
       console.error("Error adding school:", error);
+      alert("خطا در افزودن مدرسه");
     }
   };
 
-  // Update a school
   const handleUpdateSchool = async () => {
     try {
-      await updateSchool(selectedSchool.id, selectedSchool);
+      const updatedSchool = {
+        ...selectedSchool,
+        level: parseInt(selectedSchool.level) || 0, // مطمئن می‌شیم که level یه عدد باشه
+        provinceId: parseInt(selectedSchool.provinceId) || null,
+        cityId: parseInt(selectedSchool.cityId) || null,
+      };
+      await updateSchool(selectedSchool.id, updatedSchool);
       setIsEditModalOpen(false);
       fetchSchoolsData();
     } catch (error) {
@@ -89,7 +88,6 @@ export default function SchoolManagementPage() {
     }
   };
 
-  // Delete a school
   const handleDeleteSchool = async (schoolId) => {
     try {
       await deleteSchool(schoolId);
@@ -99,24 +97,27 @@ export default function SchoolManagementPage() {
     }
   };
 
-  // Open edit modal
   const openEditModal = (school) => {
-    setSelectedSchool({ ...school });
+    setSelectedSchool({
+      ...school,
+      level: parseInt(school.level) || 0, // مطمئن می‌شیم که level یه عدد باشه
+    });
     setIsEditModalOpen(true);
   };
 
-  // Open details modal
   const openDetailsModal = async (schoolId) => {
     try {
       const schoolDetails = await getSchoolDetails(schoolId);
-      setSelectedSchool(schoolDetails);
+      setSelectedSchool({
+        ...schoolDetails,
+        level: parseInt(schoolDetails.level) || 0, // مطمئن می‌شیم که level یه عدد باشه
+      });
       setIsDetailsModalOpen(true);
     } catch (error) {
       console.error("Error getting school details:", error);
     }
   };
 
-  // Handle page change
   const handlePageChange = (page) => {
     setFilters((prevFilters) => ({
       ...prevFilters,
@@ -131,11 +132,8 @@ export default function SchoolManagementPage() {
 
   return (
     <div className="flex min-h-screen bg-gray-50 text-right" dir="rtl">
-      {/* Header */}
-      <Header title="admin"/>
-      {/* Sidebar */}
+      <Header title="admin" />
       <Sidebar />
-      {/* Main Content */}
       <div className="flex-1 p-8 mr-64 mt-21">
         <div className="flex justify-between items-center mb-8">
           <h2 className="text-xl font-bold text-[var(--Primary-base)] flex items-center">
@@ -148,64 +146,67 @@ export default function SchoolManagementPage() {
             <FaPlus className="ml-2" /> افزودن مدرسه
           </button>
         </div>
-        {/* Filters and Search */}
         <div className="bg-white min-h-[500px] rounded-xl shadow-sm p-6 mb-6">
-           {/* Filters and Search */}
-                  
-                    <div className="flex flex-wrap gap-4 mb-4">
-          
-                      <div className="flex-2 min-w-[350px] ">
-                        
-                        <div className="relative">
-                          <input
-                            type="text"
-                            placeholder="جستجو..."
-                            value={searchQuery}
-                            onChange={(e) => setSearchQuery(e.target.value)}
-                            className="w-full bg-gray-100 p-2 pl-10 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                          />
-                          <Search className="absolute left-3 top-2.5 text-gray-400" size={18} />
-                        </div>
-                      </div>
-          
-                      <div className="flex-1 min-w-[100px]">
-                        
-                        <select
-                          value={filters.level}
-                          onChange={(e) => setFilters({...filters, level: parseInt(e.target.value)})}
-                          className="w-full bg-gray-100 p-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                        >
-                         
-                          <option value="0">ابتدایی</option>
-                          <option value="1">متوسطه اول</option>
-                          <option value="2">متوسطه دوم</option>
-                        </select>
-                      </div>
-                      
-                      <div className="flex-1 min-w-[100px]">
-                        
-                        <select
-                          value={filters.city}
-                          onChange={(e) => setFilters({...filters, city: e.target.value})}
-                          className="w-full bg-gray-100 p-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                        >
-                          <option value="">همه شهرها</option>
-                          <option value="تهران">تهران</option>
-                          <option value="مشهد">مشهد</option>
-                          <option value="اصفهان">اصفهان</option>
-                        </select>
-                      </div>
-                      
-                    </div>
-          {/* Schools List */}
+          <div className="flex flex-wrap gap-4 mb-4">
+            <div className="flex-2 min-w-[350px]">
+              <div className="relative">
+                <input
+                  type="text"
+                  placeholder="جستجو..."
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  className="w-full bg-gray-100 p-2 pl-10 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                />
+                <Search className="absolute left-3 top-2.5 text-gray-400" size={18} />
+              </div>
+            </div>
+            <div className="flex-1 min-w-[100px]">
+              <select
+                value={filters.Level}
+                onChange={(e) => setFilters({ ...filters, Level: parseInt(e.target.value) })}
+                className="w-full bg-gray-100 p-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+              >
+                <option value="0">ابتدایی</option>
+                <option value="1">متوسطه اول</option>
+                <option value="2">متوسطه دوم</option>
+              </select>
+            </div>
+            <div className="flex-1 min-w-[100px]">
+              <div className="flex-1 min-w-[100px] flex items-center gap-2">
+                <ComboBox
+                  label="شهر"
+                  apiEndpoint="Cities"
+                  selectedValue={filters.cityName}
+                  onChange={(city) => {
+                    setFilters({
+                      ...filters,
+                      cityId: city.id,
+                      cityName: city.name,
+                    });
+                  }}
+                  className="bg-gray-100 flex-1"
+                />
+                {filters.cityId && (
+                  <button
+                    onClick={() => setFilters({ ...filters, cityId: null, cityName: "" })}
+                    className="text-red-500 hover:text-red-700"
+                  >
+                    <X size={16} />
+                  </button>
+                )}
+              </div>
+            </div>
+          </div>
           <table className="min-w-full divide-y divide-gray-200">
             <thead className="bg-gray-50">
               <tr>
                 <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">نام مدرسه</th>
                 <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">مقطع</th>
+                <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">استان</th>
                 <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">شهرستان</th>
                 <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">کد پستی</th>
                 <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">تلفن</th>
+                <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">آدرس</th>
                 <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">عملیات</th>
               </tr>
             </thead>
@@ -213,17 +214,17 @@ export default function SchoolManagementPage() {
               {schools.map((school, index) => (
                 <tr key={school.id} className={index % 2 === 0 ? 'bg-white' : 'bg-gray-50'}>
                   <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">{school.name}</td>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{school.level}</td>
+                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                    {school.level === 0 ? "ابتدایی" : school.level === 1 ? "متوسطه اول" : "متوسطه دوم"}
+                  </td>
+                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{school.provinceName}</td>
                   <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{school.cityName}</td>
                   <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{school.postalCode}</td>
                   <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{school.telNumber}</td>
+                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{school.address}</td>
                   <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 flex space-x-2">
-                    
-
-
-                    {/* آیکون مشاهده */}
                     <button
-                      onClick={() => openDetailsModal(school.id)} 
+                      onClick={() => openDetailsModal(school.id)}
                       title="مشاهده"
                       className="p-2 bg-blue-400 text-white rounded-full hover:bg-blue-600 transition"
                     >
@@ -247,8 +248,6 @@ export default function SchoolManagementPage() {
                         />
                       </svg>
                     </button>
-
-                    {/* آیکون ویرایش */}
                     <button
                       onClick={() => openEditModal(school)}
                       title="ویرایش"
@@ -269,8 +268,6 @@ export default function SchoolManagementPage() {
                         />
                       </svg>
                     </button>
-
-                    {/* آیکون حذف */}
                     <button
                       onClick={() => handleDeleteSchool(school.id)}
                       title="حذف"
@@ -297,7 +294,6 @@ export default function SchoolManagementPage() {
             </tbody>
           </table>
         </div>
-        {/* Pagination */}
         <div className="mt-4 flex justify-center">
           <Pagination
             currentPage={currentPage}
@@ -305,7 +301,6 @@ export default function SchoolManagementPage() {
             onPageChange={handlePageChange}
           />
         </div>
-        {/* Modals */}
         {isAddModalOpen && (
           <SchoolModal
             isOpen={isAddModalOpen}
@@ -314,7 +309,6 @@ export default function SchoolManagementPage() {
             school={newSchool}
             onChange={(field, value) =>
               setNewSchool({ ...newSchool, [field]: value })
-              
             }
           />
         )}
@@ -340,4 +334,3 @@ export default function SchoolManagementPage() {
     </div>
   );
 }
-
