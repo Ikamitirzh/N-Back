@@ -20,8 +20,8 @@ export default function ComboBox({
   // Sync selectedValue with selectedOption
   useEffect(() => {
     if (selectedValue && typeof selectedValue === 'object') {
-      setSelectedOption(selectedValue); // اگر selectedValue یک object باشد
-      setSearchTerm(selectedValue.name || "");
+      // setSelectedOption(selectedValue); // اگر selectedValue یک object باشد
+      // setSearchTerm(selectedValue.name || "");
     } else if (typeof selectedValue === 'string') {
       setSelectedOption({ name: selectedValue }); // اگر string بود
       setSearchTerm(selectedValue);

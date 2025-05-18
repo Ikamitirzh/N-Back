@@ -3,7 +3,7 @@ import React, { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { Search, X, LogOut, LogIn } from "lucide-react";
 import { FaChartBar, FaPlus, FaSchool } from "react-icons/fa";
-import { fetchSchools, addSchool, updateSchool, deleteSchool, getSchoolDetails } from "../../../../utils/api";
+import { fetchSchools, addSchool, updateSchool, deleteSchool, getSchoolDetails, getProvinceIdByName, getCityIdByName } from "../../../../utils/api";
 import SchoolModal from "../../../../components/admin/schools/SchoolModal";
 import SchoolDetailsModal from "../../../../components/admin/schools/SchoolDetailsModal";
 import Sidebar from "../../../../components/admin/Sidebar";
@@ -37,10 +37,16 @@ export default function SchoolManagementPage() {
     provinceId: 0,
     cityId: 0,
   });
- 
+  console.log(selectedSchool)
   const [totalPages, setTotalPages] = useState(1);
   const [currentPage, setCurrentPage] = useState(filters['Pagination.PageIndex']);
+  // const [searchTerm, setSearchTerm] = useState("");
+  const [options, setOptions] = useState([]);
 
+  console.log(` اپشن ${options}`)
+
+
+  
   const fetchSchoolsData = async () => {
     try {
       const response = await fetchSchools({ ...filters, SearchTerm: searchQuery });
@@ -74,11 +80,14 @@ export default function SchoolManagementPage() {
 
   const handleUpdateSchool = async () => {
     try {
+      const provinceId = await getProvinceIdByName(selectedSchool.provinceName);
+      const cityId = await getCityIdByName(selectedSchool.cityName);
       const updatedSchool = {
         ...selectedSchool,
+        
         level: parseInt(selectedSchool.level) || 0, // مطمئن می‌شیم که level یه عدد باشه
-        provinceId: parseInt(selectedSchool.provinceId) || null,
-        cityId: parseInt(selectedSchool.cityId) || null,
+        provinceId: parseInt(provinceId) || null,
+        cityId: parseInt(cityId) || null,
       };
       await updateSchool(selectedSchool.id, updatedSchool);
       setIsEditModalOpen(false);

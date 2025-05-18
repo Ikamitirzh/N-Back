@@ -12,7 +12,7 @@ export default function SchoolModal({ isOpen, onClose, onSave, school, onChange 
     provinceId: null,
     cityId: null,
   });
-  
+  console.log(`form data : ${formData.telNumber}`)
   useEffect(() => {
     if (school) {
       setFormData({
@@ -116,13 +116,14 @@ export default function SchoolModal({ isOpen, onClose, onSave, school, onChange 
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
-              استان <span className="text-red-500">*</span>
-            </label>
+            
             <ComboBox
               label="استان"
               apiEndpoint="Provinces"
-              selectedValue={formData.provinceId}
+              selectedValue={{
+              id: formData.provinceId || "",
+              name: formData.provinceName || school?.provinceName || ""
+              }}
               onChange={(option) => {
                 handleChange("provinceId", option.id);
               }}
@@ -130,9 +131,7 @@ export default function SchoolModal({ isOpen, onClose, onSave, school, onChange 
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
-              شهرستان <span className="text-red-500">*</span>
-            </label>
+            
             <ComboBox
               label="شهرستان"
               apiEndpoint={`Cities?provinceId=${formData.provinceId}`}

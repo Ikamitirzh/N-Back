@@ -95,3 +95,39 @@ export const apiLogout = async () => {
     throw error;
   }
 };
+
+export const getProvinceIdByName = async (provinceName) => {
+  try {
+    const response = await axios.get(`${BASE_URL}/api/v1/admin/Provinces`, {
+      params: { SearchTerm: provinceName },
+    });
+    
+    if (response.data && response.data.length > 0) {
+      const province = response.data.find(p => p.name === provinceName);
+      return province ? province.id : null;
+    }
+    return null;
+  } catch (error) {
+    console.error("Error fetching provinces:", error);
+    return null;
+  }
+};
+export const getCityIdByName = async (cityName, provinceId) => {
+  try {
+    const response = await axios.get(`${BASE_URL}/api/v1/admin/Cities`, {
+      params: { 
+        SearchTerm: cityName,
+        ProvinceId: provinceId 
+      },
+    });
+    
+    if (response.data && response.data.length > 0) {
+      const city = response.data.find(c => c.name === cityName);
+      return city ? city.id : null;
+    }
+    return null;
+  } catch (error) {
+    console.error("Error fetching cities:", error);
+    return null;
+  }
+};
