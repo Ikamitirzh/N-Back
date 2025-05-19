@@ -9,7 +9,7 @@ export const useAuth = () => {
   const [user, setUser] = useState(null);
   const [accessToken, setAccessToken] = useState("");
   const [refreshToken, setRefreshToken] = useState("");
-
+const [isFirstLogin, setIsFirstLogin] = useState(false);
   // Load tokens from localStorage
   useEffect(() => {
     const storedAccessToken = localStorage.getItem(TOKEN_KEY);
@@ -79,12 +79,93 @@ export const useAuth = () => {
     }
   };
 
+
+
+
+
+
+
+
+
+
+
+  // =========================================================================================================================
+
+  
+  // Send OTP
+  const sendOtp = async (phoneNumber) => {
+    try {
+      const response = await axios.post(
+        `${BASE_URL}/api/v1/school-principal/Auth/send-otp`,
+        { phoneNumber }
+      );
+      return response.data; // { expirationSeconds }
+    } catch (error) {
+      console.error("Error sending OTP:", error);
+      throw error;
+    }
+  };
+
+  // Verify OTP
+  const verifyOtp = async (phoneNumber, otpCode) => {
+    try {
+      const response = await axios.post(
+        `${BASE_URL}/api/v1/school-principal/Auth/verify-otp`,
+        { phoneNumber, otpCode }
+      );
+      
+      const { token, isFirstLogin } = response.data;
+      console.log(`respons : ${isFirstLogin}`);
+      localStorage.setItem("accessToken", token.accessToken);
+      localStorage.setItem("refreshToken", token.refreshToken);
+      
+      setAccessToken(token.accessToken);
+      setRefreshToken(token.refreshToken);
+      setIsFirstLogin(isFirstLogin);
+      setUser({ phoneNumber });
+
+      return { isFirstLogin: isFirstLogin };
+    } catch (error) {
+      console.error("Error verifying OTP:", error);
+      throw error;
+    }
+  };
+
+  // Refresh Token
+  const refreshAccessTokenprincipal = async () => {
+    try {
+      const response = await axios.post(
+        `${BASE_URL}/api/v1/school-principal/Auth/refresh-token`,
+        null,
+        {
+          headers: {
+            Authorization: `Bearer ${refreshToken}`,
+          },
+        }
+      );
+
+      const newAccessToken = response.data.accessToken;
+      localStorage.setItem("accessToken", newAccessToken);
+      setAccessToken(newAccessToken);
+      return newAccessToken;
+    } catch (error) {
+      console.error("Error refreshing token:", error);
+      logout();
+      throw error;
+    }
+  };
+
+
   return {
     user,
     accessToken,
     refreshToken,
+    isFirstLogin,
+    sendOtp,
+    verifyOtp,
     login,
     authLogout,
     refreshAccessToken,
+    refreshAccessTokenprincipal
   };
 };
