@@ -131,3 +131,28 @@ export const getCityIdByName = async (cityName, provinceId) => {
     return null;
   }
 };
+
+
+
+
+
+
+// =================================================================user===========================================================
+export const fetchProvinces = async () => {
+  const response = await api.get("/api/v1/Provinces");
+  return response.data.items || response.data;
+};
+
+export const fetchCities = async (provinceId) => {
+  const response = await api.get("/api/v1/Cities", {
+    params: { parentId: provinceId },
+  });
+  return response.data.items || response.data;
+};
+
+export const fetchSchoolsUser = async (cityId) => {
+  const response = await api.get("/api/v1/Schools", {
+    params: { parentId: cityId },
+  });
+  return response.data.items || response.data;
+};

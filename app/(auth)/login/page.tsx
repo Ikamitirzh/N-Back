@@ -38,7 +38,7 @@ export default function PrincipalLogin() {
 
   const otpInputs = useRef<(HTMLInputElement | null)[]>([]);
 
-  const { sendOtp, verifyOtp, login } = useAuth();
+  const { sendOtp, verifyOtp, adminLogin } = useAuth();
 
   // Fetch schools list when in profile mode
   useEffect(() => {
@@ -144,8 +144,8 @@ export default function PrincipalLogin() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     try {
-      await login(formData.phoneNumber, formData.password);
-      router.push("/admin/dashboard");
+      await adminLogin(formData.phoneNumber, formData.password);
+      router.push("pages/admin/schools");
     } catch (error) {
       setErrors({ ...errors, password: "نام کاربری یا رمز عبور نادرست است" });
     }
