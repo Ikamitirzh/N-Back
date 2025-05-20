@@ -69,7 +69,7 @@ export default function StudentLogin() {
       };
 
       await studentLogin(payload);
-      router.push('/user/test');
+      router.push('/pages/test/test-selection');
     } catch (err) {
       setError('خطا در ورود. لطفاً اطلاعات را بررسی کنید.');
       console.error('Login error:', err);

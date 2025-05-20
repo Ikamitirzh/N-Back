@@ -235,7 +235,7 @@ export default function SchoolManagementPage() {
                     <button
                       onClick={() => openDetailsModal(school.id)}
                       title="مشاهده"
-                      className="p-2 bg-blue-400 text-white rounded-full hover:bg-blue-600 transition"
+                      className="p-2 bg-blue-200 text-blue-400 rounded-full hover:bg-blue-600 hover:text-white transition"
                     >
                       <svg
                         xmlns="http://www.w3.org/2000/svg"
@@ -260,7 +260,7 @@ export default function SchoolManagementPage() {
                     <button
                       onClick={() => openEditModal(school)}
                       title="ویرایش"
-                      className="p-2 bg-yellow-300 text-white rounded-full hover:bg-yellow-500 transition"
+                      className="p-2 bg-yellow-100 text-yellow-500 rounded-full hover:bg-yellow-500 hover:text-white transition"
                     >
                       <svg
                         xmlns="http://www.w3.org/2000/svg"
@@ -280,7 +280,7 @@ export default function SchoolManagementPage() {
                     <button
                       onClick={() => handleDeleteSchool(school.id)}
                       title="حذف"
-                      className="p-2 bg-red-400 text-white rounded-full hover:bg-red-500 transition"
+                      className="p-2 bg-red-200 text-red-400 rounded-full hover:bg-red-400 hover:text-white transition"
                     >
                       <svg
                         xmlns="http://www.w3.org/2000/svg"
