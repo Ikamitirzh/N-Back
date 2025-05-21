@@ -198,7 +198,7 @@ export default function TestScreen() {
       {/* دکمه انصراف */}
       <button
         onClick={cancelTest}
-        className="absolute top-4 right-4 px-4 py-2 bg-red-500 hover:bg-red-600 text-white rounded-md text-sm"
+        className="absolute top-4 right-4 px-4 py-2   text-red-600 rounded-md text-sm"
       >
         انصراف از آزمون
       </button>
@@ -207,7 +207,7 @@ export default function TestScreen() {
       <div className="w-full bg-gray-200 rounded-full h-4 mb-6 max-w-md z-10">
         <div
           className="bg-blue-500 h-4 rounded-full transition-all duration-1000 ease-linear"
-          style={{ width: `${(timeLeft / 3) * 100}%` }}
+          style={{ width: `${((timeLeft-1) / 2) * 100}%` }}
         ></div>
       </div>
 
@@ -218,7 +218,7 @@ export default function TestScreen() {
             <img
               src={`${BASE_URL}/${currentTerm.picturePath}`}
               alt="تصویر سوال"
-              width={300}
+              width={340}
               className={`object-contain transition-opacity duration-500 ${
                 imageTransition ? 'opacity-50' : 'opacity-100'
               }`}

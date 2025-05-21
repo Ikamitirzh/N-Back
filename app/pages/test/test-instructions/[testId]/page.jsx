@@ -75,34 +75,57 @@ export default function TestInstructions() {
     <div className="min-h-screen flex flex-col items-center justify-center bg-gray-50 relative overflow-hidden">
       {/* Background Image */}
       <div className="absolute inset-0 z-0">
-  <Image
-    src="/background.png"
-    alt="Background"
-    fill // معادل layout="fill" در نسخه‌های قدیمی
-    className="object-cover" // معادل objectFit="cover"
-    quality={100}
-    priority // برای تصاویر مهم که باید سریع لود شوند
-  />
-</div>
+        <Image
+          src="/background.png"
+          alt="Background"
+          fill
+          className="object-cover"
+          quality={100}
+          priority
+        />
+      </div>
 
-     
+      {/* عنوان قوانین در بالا */}
+      <h1 className="text-3xl font-bold text-center mb-6 text-blue-600  z-10"> {getTestName()} قوانین</h1>
 
       {/* Content Container */}
-      <div className="relative z-10 bg-white bg-opacity-90 rounded-lg shadow-xl p-8 max-w-md w-full mx-4 my-8 rtl">
-        <h1 className="text-2xl font-bold text-center mb-6 text-gray-800">قوانین {getTestName()}</h1>
-        
-        {loading ? (
-          <div className="flex justify-center">
-            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-500"></div>
-          </div>
-        ) : error ? (
-          <div className="text-red-500 text-center mb-4">{error}</div>
-        ) : (
-          <>
-            {/* متن راهنما با اسکرول داخلی */}
-            <div className="max-h-64 overflow-y-auto mb-6 custom-scrollbar">
+      <div className="relative z-10 bg-white bg-opacity-90 rounded-lg shadow-xl p-8 max-w-150 w-full mx-4 my-7 rtl">
+        {/* آیکون صدا در بالای سمت راست کادر */}
+        <div className="flex justify-end mb-4">
+          <button
+            onClick={playAudio}
+            disabled={!instructions?.audioPath}
+            className={`flex items-center px-3 py-3 rounded-full bg-orange-400 ${
+              instructions?.audioPath 
+                ? 'bg-blue-500 hover:bg-blue-600 text-white' 
+                : 'bg-gray-200 text-gray-100 cursor-not-allowed'
+            }`}
+          >
+            {isPlaying ? (
+              <>
+                <span className="ml-2">در حال پخش...</span>
+              </>
+            ) : (
+              <>
+                <FaVolumeUp className=" rounded-full " />
+                
+              </>
+            )}
+          </button>
+        </div>
+
+        {/* متن راهنما با اسکرول داخلی */}
+        <div className="max-h-64 overflow-y-auto mb-6 custom-scrollbar">
+          {loading ? (
+            <div className="flex justify-center">
+              <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-500"></div>
+            </div>
+          ) : error ? (
+            <div className="text-red-500 text-center mb-4">{error}</div>
+          ) : (
+            <div className="prose prose-sm text-right px-2">
               {instructions?.description ? (
-                <div className="prose prose-sm text-justify px-2">
+                <div dir="rtl">
                   {instructions.description.split('\n').map((paragraph, index) => (
                     <p key={index} className="mb-4">{paragraph}</p>
                   ))}
@@ -111,40 +134,16 @@ export default function TestInstructions() {
                 <div className="text-gray-500 text-center">راهنمای آزمون موجود نیست</div>
               )}
             </div>
+          )}
+        </div>
 
-            {/* بخش پخش صوت */}
-            <div className="flex justify-center mb-6">
-              <button
-                onClick={playAudio}
-                disabled={!instructions?.audioPath}
-                className={`flex items-center px-4 py-2 rounded-md ${
-                  instructions?.audioPath 
-                    ? 'bg-blue-500 hover:bg-blue-600 text-white' 
-                    : 'bg-gray-200 text-gray-500 cursor-not-allowed'
-                }`}
-              >
-                {isPlaying ? (
-                  <>
-                    <span className="ml-2">در حال پخش...</span>
-                  </>
-                ) : (
-                  <>
-                    <FaVolumeUp className="ml-2" />
-                    <span>پخش راهنمای صوتی</span>
-                  </>
-                )}
-              </button>
-            </div>
-          </>
-        )}
-
-        {/* دکمه شروع آزمون */}
+        {/* دکمه شروع آزمون بزرگتر و رنگ آبی */}
         <div className="pt-4 border-t border-gray-200 text-center">
           <button
             onClick={startTest}
-            className="px-6 py-2 bg-blue-500 hover:bg-blue-600 text-white rounded-md font-medium flex items-center mx-auto"
+            className="px-55 py-2  bg-blue-500 hover:bg-blue-600 text-white rounded-md font-medium flex items-center mx-auto"
           >
-            <FaPlay className="ml-2" />
+           
             شروع آزمون
           </button>
         </div>

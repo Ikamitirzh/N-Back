@@ -91,24 +91,24 @@ export default function TestResults() {
         <h1 className="text-2xl font-bold text-center mb-6 text-gray-800">نتایج آزمون</h1>
 
         <div className="space-y-4 mb-8">
-          <div className="flex justify-between items-center border-b pb-2">
-            <span className="text-green-600 font-bold">{results.correctAnswers}</span>
-            <span className="font-medium">:پاسخ‌های صحیح</span>
+          <div className="flex justify-between items-center mx-15  pb-2">
+            <span className="text-green-600 font-larg font-bold">{results.correctAnswers}</span>
+            <span className="font-larg">:پاسخ‌های صحیح</span>
           </div>
 
-          <div className="flex justify-between items-center border-b pb-2">
-            <span className="text-red-600 font-bold">{results.incorrectAnswers}</span>
-            <span className="font-medium">:پاسخ‌های نادرست</span>
+          <div className="flex justify-between items-center mx-15 pb-2">
+            <span className="text-red-600 font-larg font-bold">{results.incorrectAnswers}</span>
+            <span className="font-larg">:پاسخ‌های نادرست</span>
           </div>
 
-          <div className="flex justify-between items-center border-b pb-2">
-            <span className="text-yellow-600 font-bold">{results.unansweredTerms}</span>
-            <span className="font-medium">:پاسخ داده نشده</span>
+          <div className="flex justify-between items-center mx-15  pb-2">
+            <span className="text-yellow-600 font-larg font-bold">{results.unansweredTerms}</span>
+            <span className="font-larg">:پاسخ داده نشده</span>
           </div>
 
-          <div className="flex justify-between items-center border-b pb-2">
-            <span className="text-blue-600 font-bold">{results.totalTerms}</span>
-            <span className="font-medium">:کل سوالات</span>
+          <div className="flex justify-between items-center mx-15 pb-2">
+            <span className="text-blue-600 font-larg font-bold">{results.totalTerms}</span>
+            <span className="font-larg">:کل سوالات</span>
           </div>
         </div>
 

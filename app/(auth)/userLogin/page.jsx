@@ -9,14 +9,14 @@ const BASE_URL = "https://localhost:7086";
 import axios from 'axios';
 
 export default function StudentLogin() {
-  const { studentLogin } = useAuth();
+  const { studentLogin, setupAxiosInterceptor } = useAuth();
   const router = useRouter();
   const [formData, setFormData] = useState({
     phoneNumber: '',
     firstName: '',
     lastName: '',
     age: '',
-    gender: 1, // Default to "مرد" (value: 1)
+    gender: 0, // Default to "مرد" (value: 1)
     isRightHanded: true,
     provinceId: '',
     cityId: '',
@@ -55,6 +55,7 @@ export default function StudentLogin() {
   };
 
   const handleSubmit = async (e) => {
+    
     e.preventDefault();
     setLoading(true);
     setError('');
@@ -69,6 +70,7 @@ export default function StudentLogin() {
       };
 
       await studentLogin(payload);
+      
       router.push('/pages/test/test-selection');
     } catch (err) {
       setError('خطا در ورود. لطفاً اطلاعات را بررسی کنید.');
@@ -86,9 +88,10 @@ export default function StudentLogin() {
           src="/background.png"
           alt="Background"
           layout="fill"
-          objectFit="cover"
+          style={{ objectFit: "cover" }} // ← این جایگزین objectFit می‌شود
           quality={100}
         />
+
       </div>
 
       {/* Form Container */}
@@ -245,29 +248,32 @@ export default function StudentLogin() {
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">جنسیت:</label>
               <div className="flex space-x-4">
+
                 <label className="inline-flex items-center">
                   <input
                     type="radio"
                     name="gender"
                     value={0}
-                    checked={formData.gender === 0}
+                    checked={formData.gender === 0 || formData.gender === "0"}
+                    onChange={handleChange}
+                    className="text-blue-600 h-4 w-4"
+                  />
+                  <span className="mr-1 text-sm">مرد</span>
+                </label>
+
+                <label className="inline-flex items-center">
+                  <input
+                    type="radio"
+                    name="gender"
+                    value={1}
+                    checked={formData.gender === 1 || formData.gender === "1"}
                     onChange={handleChange}
                     className="text-blue-600 h-4 w-4"
                     required
                   />
                   <span className="mr-1 text-sm">زن</span>
                 </label>
-                <label className="inline-flex items-center">
-                  <input
-                    type="radio"
-                    name="gender"
-                    value={1}
-                    checked={formData.gender === 1}
-                    onChange={handleChange}
-                    className="text-blue-600 h-4 w-4"
-                  />
-                  <span className="mr-1 text-sm">مرد</span>
-                </label>
+                
               </div>
             </div>
             <div>
