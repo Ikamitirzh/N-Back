@@ -68,9 +68,7 @@ export default function ComboBox({
 
   return (
     <div className={`relative ${className}`}>
-      <label className="block text-sm font-medium text-gray-700 mb-1">
-        {label} <span className="text-red-500">*</span>
-      </label>
+      
 
       <input
         type="text"

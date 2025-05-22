@@ -5,23 +5,27 @@ import { useRouter } from 'next/navigation';
 import axios from 'axios';
 import Image from 'next/image';
 import axiosInstance from '../../../../utils/api';
+import { useAuth } from '../../../../hooks/useAuth';
 
 const BASE_URL = 'https://localhost:7086';
 
 export default function TestSelection() {
+
   const router = useRouter();
   const [tests, setTests] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
 
+  const { apiClient } = useAuth();
+
   // دریافت لیست آزمون‌ها
   useEffect(() => {
     const fetchTests = async () => {
       try {
-        const response = await axios.get(`${BASE_URL}/api/v1/WorkingMemoryTests`);
+        // استفاده از apiClient به جای axios خام
+        const response = await apiClient.get('/api/v1/WorkingMemoryTests');
         setTests(response.data);
       } catch (err) {
-        setError('خطا در دریافت اطلاعات آزمون‌ها');
         console.error('Error fetching tests:', err);
       } finally {
         setLoading(false);

@@ -169,11 +169,11 @@ export default function SchoolManagementPage() {
                 <Search className="absolute left-3 top-2.5 text-gray-400" size={18} />
               </div>
             </div>
-            <div className="flex-1 min-w-[100px]">
+            <div className="flex-1 min-w-[100px] ">
               <select
                 value={filters.Level}
                 onChange={(e) => setFilters({ ...filters, Level: parseInt(e.target.value) })}
-                className="w-full bg-gray-100 p-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                className="w-full py-2.5 bg-gray-100 px-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
               >
                 <option value="0">ابتدایی</option>
                 <option value="1">متوسطه اول</option>

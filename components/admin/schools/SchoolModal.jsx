@@ -116,7 +116,9 @@ export default function SchoolModal({ isOpen, onClose, onSave, school, onChange 
           </div>
 
           <div>
-            
+            <label className="block text-sm font-medium text-gray-700 mb-1">
+              استان <span className="text-red-500">*</span>
+            </label>
             <ComboBox
               label="استان"
               apiEndpoint="Provinces"
@@ -131,7 +133,9 @@ export default function SchoolModal({ isOpen, onClose, onSave, school, onChange 
           </div>
 
           <div>
-            
+            <label className="block text-sm font-medium text-gray-700 mb-1">
+              شهرستان <span className="text-red-500">*</span>
+            </label>
             <ComboBox
               label="شهرستان"
               apiEndpoint={`Cities?provinceId=${formData.provinceId}`}

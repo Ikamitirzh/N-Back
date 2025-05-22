@@ -7,6 +7,13 @@ const BASE_URL = "https://localhost:7086";
 const TOKEN_KEY = "accessToken";
 const REFRESH_TOKEN_KEY = "refreshToken";
 
+export const apiClient = axios.create({
+  baseURL: BASE_URL,
+  headers: {
+    'Content-Type': 'application/json'
+  }
+});
+
 export const useAuth = () => {
   const [user, setUser] = useState(null);
   const [accessToken, setAccessToken] = useState("");
@@ -170,6 +177,16 @@ export const useAuth = () => {
 
   // Interceptor برای مدیریت توکن منقضی شده
   const setupAxiosInterceptor = (axiosInstance) => {
+    // اضافه کردن توکن به تمام درخواست‌ها
+    axiosInstance.interceptors.request.use((config) => {
+      const token = localStorage.getItem(TOKEN_KEY);
+      if (token) {
+        config.headers.Authorization = `Bearer ${token}`;
+      }
+      return config;
+    });
+
+    // مدیریت خطای 401
     axiosInstance.interceptors.response.use(
       (response) => response,
       async (error) => {
@@ -193,6 +210,7 @@ export const useAuth = () => {
     );
   };
 
+
   return {
     user,
     accessToken,
@@ -213,6 +231,7 @@ export const useAuth = () => {
     // Common functions
     logout,
     refreshAccessToken,
+     apiClient, // اضافه کردن apiClient به خروجی هوک
     setupAxiosInterceptor
   };
 };

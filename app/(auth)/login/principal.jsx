@@ -1,274 +1,552 @@
 "use client";
-import React, { useState, useEffect, useRef } from "react";
+import React, { useState, useRef, useEffect } from "react";
 import axios from "axios";
 import { useRouter } from "next/navigation";
+import { FaMobileAlt, FaLock, FaCheck, FaUser, FaIdCard, FaSchool } from "react-icons/fa";
+import { HiEye, HiEyeOff, HiArrowLeft, HiX } from "react-icons/hi";
+import { useAuth } from "../../../hooks/useAuth";
+import ComboBox from "../../../components/ComboBoxUser";
+const BASE_URL = "https://localhost:7086";
 
 export default function PrincipalLogin() {
   const router = useRouter();
-
-  // مرحله ها
-  const [loginMode, setLoginMode] = useState("mobile"); // mobile | otp | profile
-  const [mobile, setMobile] = useState("");
-  const [otp, setOtp] = useState(Array(5).fill(""));
-  const [profileData, setProfileData] = useState({
-    fullName: "",
-    nationalCode: "",
+  const [loginMode, setLoginMode] = useState<"password" | "otp" | "otp-verify" | "profile">("otp");
+  const [showPassword, setShowPassword] = useState(false);
+  const [formData, setFormData] = useState({
     phoneNumber: "",
+    password: "",
+    otp: Array(5).fill(""),
   });
 
-  const [errors, setErrors] = useState({ mobile: "", otp: "", profile: "" });
-  const [timer, setTimer] = useState(120);
-  const [isResendDisabled, setIsResendDisabled] = useState(false);
+  const [profileData, setProfileData] = useState({
+    firstName: "",
+    lastName: "",
+    nationalCode: "",
+    
+    provinceId: '',
+    cityId: '',
+    schoolId: '',
+    provinceName: '', // Added to store names for ComboBox
+    cityName: '',
+  });
+  
+  const [schools, setSchools] = useState<Array<{id: number, name: string}>>([]);
+  const [errors, setErrors] = useState({
+    phoneNumber: "",
+    password: "",
+    otp: "",
+    profile: "",
+  });
+  const [isLoading, setIsLoading] = useState(false);
+  const [timer, setTimer] = useState(0);
+  const [isFirstLogin, setIsFirstLogin] = useState(false);
 
-  const inputRefs = useRef([]);
+  const otpInputs = useRef<(HTMLInputElement | null)[]>([]);
 
-  // --- API Call: Send OTP ---
-  const handleSendOtp = async () => {
-    if (!mobile || mobile.length !== 11) {
-      setErrors((prev) => ({ ...prev, mobile: "لطفاً یک شماره معتبر وارد کنید." }));
-      return;
+  const { sendOtp, verifyOtp, adminLogin } = useAuth();
+
+  // Fetch schools list when in profile mode
+  useEffect(() => {
+    if (loginMode === "profile") {
+      fetchSchools();
     }
+  }, [loginMode]);
 
+  const fetchSchools = async () => {
     try {
-      await axios.post("https://localhost:7086/api/v1/school-principal/Auth/send-otp", {
-        userName: mobile,
-      });
-
-      setErrors((prev) => ({ ...prev, mobile: "" }));
-      setLoginMode("otp");
-      startTimer();
+      const response = await axios.get(`${BASE_URL}/api/v1/admin/schools`);
+      setSchools(response.data);
     } catch (error) {
-      setErrors((prev) => ({ ...prev, mobile: "خطا در ارسال کد یکبار مصرف" }));
+      console.error("Error fetching schools:", error);
     }
   };
 
-  // --- API Call: Verify OTP ---
-  const handleVerifyOtp = async () => {
-    const code = otp.join("");
+  // ... (بقیه توابع مانند قبل)
 
-    if (code.length !== 5) {
-      setErrors((prev) => ({ ...prev, otp: "لطفاً کد یکبار مصرف را کامل کنید." }));
-      return;
+  // Handle OTP input changes
+  const handleOtpChange = (index: number, value: string) => {
+    if (/^\d*$/.test(value) && value.length <= 1) {
+      const newOtp = [...formData.otp];
+      newOtp[index] = value;
+      setFormData(prev => ({ ...prev, otp: newOtp }));
+      if (value && index < 4 && otpInputs.current[index + 1]) {
+        otpInputs.current[index + 1]?.focus();
+      }
     }
+  };
+
+
+  useEffect(() => {
+  if (loginMode === "otp-verify" && timer > 0) {
+    const interval = setInterval(() => {
+      setTimer((prev) => prev - 1);
+    }, 1000);
+
+    return () => clearInterval(interval);
+  }
+}, [loginMode, timer]);
+
+
+  // Send OTP
+  const handleSendOtp = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setIsLoading(true);
 
     try {
-      const response = await axios.post("https://localhost:7086/api/v1/school-principal/Auth/verify-otp", {
-        userName: mobile,
-        otp: code,
-      });
+      const response = await sendOtp(formData.phoneNumber);
+      setTimer(response.expirationSeconds || 120);
+      setLoginMode("otp-verify");
+    } catch (error) {
+      setErrors({ ...errors, phoneNumber: "خطا در ارسال کد یکبار مصرف" });
+    } finally {
+      setIsLoading(false);
+    }
+  };
 
-      const { accessToken, refreshToken, isFirstLogin } = response.data;
+  // Verify OTP
+  const handleVerifyOtp = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setIsLoading(true);
 
-      localStorage.setItem("principalAccessToken", accessToken);
-      localStorage.setItem("principalRefreshToken", refreshToken);
+    try {
+      const otpCode = formData.otp.join("");
+      const response = await verifyOtp(formData.phoneNumber, otpCode);
 
-      if (isFirstLogin) {
-        setLoginMode("profile");
+      if (response.isFirstLogin) {
+        setIsFirstLogin(true); // Show profile form
       } else {
         router.push("/admin/dashboard");
       }
+      setLoginMode("profile");
     } catch (error) {
-      setErrors((prev) => ({ ...prev, otp: "کد وارد شده نامعتبر است." }));
+      setErrors({ ...errors, otp: "کد وارد شده نامعتبر است" });
+    } finally {
+      setIsLoading(false);
     }
   };
 
-  // --- API Call: Save Profile ---
+  // Save profile data
   const handleSaveProfile = async () => {
-    if (!profileData.fullName || !profileData.nationalCode || !profileData.phoneNumber) {
-      setErrors((prev) => ({ ...prev, profile: "لطفاً تمامی فیلد‌ها را پر کنید." }));
+    if (!profileData.firstName || !profileData.lastName || !profileData.nationalCode) {
+      setErrors({ ...errors, profile: "لطفاً تمام فیلدهای ضروری را پر کنید" });
       return;
     }
 
+    setIsLoading(true);
+
     try {
-      await axios.post("https://localhost:7086/api/v1/school-principal/Profiles", profileData, {
-        headers: {
-          Authorization: `Bearer ${localStorage.getItem("principalAccessToken")}`,
-        },
+      const response = await axios.post(`${BASE_URL}/api/v1/school-principal/Profiles`, {
+        firstName: profileData.firstName,
+        lastName: profileData.lastName,
+        nationalCode: profileData.nationalCode,
+        schoolId: profileData.schoolId,
       });
 
       router.push("/admin/dashboard");
     } catch (error) {
-      setErrors((prev) => ({ ...prev, profile: "خطا در ذخیره اطلاعات." }));
+      setErrors({ ...errors, profile: "خطا در ذخیره اطلاعات" });
+    } finally {
+      setIsLoading(false);
     }
   };
 
-  // --- OTP Input Handling ---
-  const handleChangeOtp = (index, value) => {
-    if (/^\d*$/.test(value) && value.length <= 1) {
-      const newOtp = [...otp];
-      newOtp[index] = value;
-      setOtp(newOtp);
+  // Handle form changes
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const { name, value } = e.target;
+    setFormData(prev => ({ ...prev, [name]: value }));
+    setErrors(prev => ({ ...prev, [name]: "" }));
+  };
 
-      if (value && index < 4 && inputRefs.current[index + 1]) {
-        inputRefs.current[index + 1].focus();
-      }
+  // Login with password
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    try {
+      await adminLogin(formData.phoneNumber, formData.password);
+      router.push("pages/admin/schools");
+    } catch (error) {
+      setErrors({ ...errors, password: "نام کاربری یا رمز عبور نادرست است" });
     }
   };
+  return (
+    <div className="flex h-screen bg-gray-50 text-right">
+     
 
-  const handleKeyDown = (index, e) => {
-    if (e.key === "Backspace" && !otp[index] && index > 0) {
-      inputRefs.current[index - 1].focus();
-    }
-  };
+      {/* Right Side: Login Form */}
+      <div className="w-1/2 flex items-center justify-center p-4" dir="rtl">
+        <div className="bg-white rounded-2xl shadow-xl p-8 max-w-sm w-full">
+          {/* نمایش عنوان مناسب بر اساس حالت فعلی */}
+          {loginMode === "otp-verify" ? (
+            <div className="flex items-center mb-6 cursor-pointer" onClick={() => setLoginMode("otp")}>
+              <HiArrowLeft className="text-gray-500 ml-2" />
+              <h1 className="text-2xl font-bold">تایید شماره موبایل</h1>
+            </div>
+          ) : loginMode === "profile" ? (
+            <h1 className="text-2xl font-bold text-center mb-6">تکمیل اطلاعات پروفایل</h1>
+          ) : (
+            <h1 className="text-2xl font-bold text-center mb-6">ورود به سامانه</h1>
+          )}
 
-  // --- Timer ---
-  const startTimer = () => {
-    setTimer(120);
-    setIsResendDisabled(true);
-    const interval = setInterval(() => {
-      setTimer((prev) => {
-        if (prev <= 1) {
-          clearInterval(interval);
-          setIsResendDisabled(false);
-          return 0;
-        }
-        return prev - 1;
-      });
-    }, 1000);
-  };
+          {/* تب‌های انتخاب روش ورود - فقط در حالت‌های اولیه نمایش داده شود */}
+          {loginMode === "password" || loginMode === "otp" ? (
+            <div className="flex mb-6 border border-gray-200 rounded-lg overflow-hidden shadow-sm">
+              <button
+                onClick={() => setLoginMode("password")}
+                className={`w-1/2 py-2 font-medium text-m transition rounded-md ${
+                  loginMode === "password"
+                    ? "bg-blue-100 text-blue-600 shadow-md m-1.5"
+                    : "bg-white text-gray-600"
+                }`}
+              >
+                ورود با رمز عبور
+              </button>
+              <button
+                onClick={() => setLoginMode("otp")}
+                className={`w-1/2 py-2 font-medium text-m transition rounded-md ${
+                  loginMode === "otp"
+                    ? "bg-blue-100 text-blue-600 shadow-md m-1.5"
+                    : "bg-white text-gray-600"
+                }`}
+              >
+                ورود با کد یکبار مصرف
+              </button>
+            </div>
+          ) : null}
 
-  // --- Resend OTP ---
-  const handleResendOtp = () => {
-    handleSendOtp();
-  };
+          {/* فرم ورود با رمز عبور */}
+          {loginMode === "password" && (
+            <form onSubmit={handleSubmit}>
+              <div>
+                <label htmlFor="phoneNumber" className="block font-semibold mb-1 text-gray-700">
+                  شماره موبایل
+                </label>
+                <div className="relative">
+                  <input
+                    type="text"
+                    name="phoneNumber"
+                    id="phoneNumber"
+                    placeholder="09xxxxxxxxx"
+                    value={formData.phoneNumber}
+                    onChange={handleChange}
+                    className={`w-full py-2 px-10 rounded-md border text-gray-700 focus:ring-2 focus:ring-blue-400 focus:outline-none ${
+                      errors.phoneNumber ? "border-red-500" : "border-gray-300"
+                    }`}
+                  />
+                  <FaMobileAlt className="absolute right-3 top-2.5 text-gray-400" />
+                </div>
+                {errors.phoneNumber && (
+                  <p className="text-sm text-red-500 mt-1">{errors.phoneNumber}</p>
+                )}
+              </div>
 
-  // --- Render Mobile Input ---
-  if (loginMode === "mobile") {
-    return (
-      <div className="flex justify-center items-center h-screen bg-gray-100">
-        <div className="bg-white p-8 rounded-lg shadow-md w-full max-w-md">
-          <h2 className="text-xl font-bold mb-4">ورود مدیر</h2>
-          <p className="mb-4 text-gray-600">برای ورود، شماره موبایل خود را وارد کنید.</p>
+              <div className="mt-4">
+                <label htmlFor="password" className="block font-semibold mb-1 text-gray-700">
+                  رمز عبور
+                </label>
+                <div className="relative">
+                  <input
+                    type={showPassword ? "text" : "password"}
+                    name="password"
+                    id="password"
+                    placeholder="رمز عبور"
+                    value={formData.password}
+                    onChange={handleChange}
+                    className={`w-full py-2 px-10 rounded-md border text-gray-700 focus:ring-2 focus:ring-blue-400 focus:outline-none ${
+                      errors.password ? "border-red-500" : "border-gray-300"
+                    }`}
+                  />
+                  <FaLock className="absolute right-3 top-2.5 text-gray-400" />
+                  <button
+                    type="button"
+                    onClick={() => setShowPassword(!showPassword)}
+                    className="absolute left-3 top-3 text-gray-500"
+                  >
+                    {showPassword ? <HiEyeOff /> : <HiEye />}
+                  </button>
+                </div>
+                {errors.password && (
+                  <p className="text-sm text-red-500 mt-1">{errors.password}</p>
+                )}
+              </div>
 
-          <input
-            type="text"
-            placeholder="شماره موبایل"
-            value={mobile}
-            onChange={(e) => setMobile(e.target.value)}
-            className={`w-full p-2 border ${
-              errors.mobile ? "border-red-500" : "border-gray-300"
-            } rounded-lg mb-2`}
-          />
-          {errors.mobile && <p className="text-red-500 text-sm mb-4">{errors.mobile}</p>}
+              <button
+                type="submit"
+                className={`w-full bg-blue-600 hover:bg-blue-700 text-white py-2 rounded-md font-semibold transition mt-4 ${
+                  isLoading ? "opacity-70 cursor-not-allowed" : ""
+                }`}
+                disabled={isLoading}
+              >
+                {isLoading ? "در حال پردازش..." : "ورود"}
+              </button>
+            </form>
+          )}
 
-          <button
-            onClick={handleSendOtp}
-            className="w-full py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg"
-          >
-            دریافت کد
-          </button>
-        </div>
-      </div>
-    );
-  }
+          {/* فرم درخواست کد یکبار مصرف */}
+          {loginMode === "otp" && (
+            <form onSubmit={handleSendOtp}>
+              <p className="text-center m-7 text-gray-700">برای دریافت کد یکبار مصرف شماره موبایل خود را وارد کنید.</p>
+              <div>
+                <label htmlFor="phoneNumber" className="block font-semibold mb-1 text-gray-700">
+                  شماره موبایل
+                </label>
+                <div className="relative">
+                  <input
+                    type="text"
+                    name="phoneNumber"
+                    id="phoneNumber"
+                    placeholder="09xxxxxxxxx"
+                    value={formData.phoneNumber}
+                    onChange={handleChange}
+                    className={`w-full py-2 px-10 rounded-md border text-gray-700 focus:ring-2 focus:ring-blue-400 focus:outline-none ${
+                      errors.phoneNumber ? "border-red-500" : "border-gray-300"
+                    }`}
+                  />
+                  <FaMobileAlt className="absolute right-3 top-2.5 text-gray-400" />
+                </div>
+                {errors.phoneNumber && (
+                  <p className="text-sm text-red-500 mt-1">{errors.phoneNumber}</p>
+                )}
+              </div>
 
-  // --- Render OTP Input ---
-  if (loginMode === "otp") {
-    return (
-      <div className="flex justify-center items-center h-screen bg-gray-100">
-        <div className="bg-white p-8 rounded-lg shadow-md w-full max-w-md">
-          <h2 className="text-xl font-bold mb-4">تایید کد یکبار مصرف</h2>
-          <p className="mb-4 text-gray-600">کد یکبار مصرف به شماره `{mobile}` ارسال شد.</p>
+              <button
+                type="submit"
+                className={`w-full bg-blue-600 hover:bg-blue-700 text-white py-2 rounded-md font-semibold transition mt-4 ${
+                  isLoading ? "opacity-70 cursor-not-allowed" : ""
+                }`}
+                disabled={isLoading}
+              >
+                {isLoading ? "در حال پردازش..." : "دریافت کد"}
+              </button>
+            </form>
+          )}
 
-          <div className="flex justify-between my-4">
-            {otp.map((digit, index) => (
-              <input
-                key={index}
-                ref={(el) => (inputRefs.current[index] = el)}
-                type="text"
-                maxLength="1"
-                value={digit}
-                onChange={(e) => handleChangeOtp(index, e.target.value)}
-                onKeyDown={(e) => handleKeyDown(index, e)}
-                className="w-12 h-12 text-center text-xl border rounded focus:ring-2 focus:ring-blue-500"
-              />
-            ))}
-          </div>
+          {/* فرم تایید کد یکبار مصرف */}
+          {loginMode === "otp-verify" && (
+            <form onSubmit={handleVerifyOtp}>
+              <div>
+                <label htmlFor="phoneNumber" className="block font-semibold mb-1 text-gray-700">
+                  شماره موبایل
+                </label>
+                <div className="relative">
+                  <input
+                    type="text"
+                    name="phoneNumber"
+                    id="phoneNumber"
+                    placeholder="09xxxxxxxxx"
+                    value={formData.phoneNumber}
+                    onChange={handleChange}
+                    disabled={true}
+                    className="w-full py-2 px-10 rounded-md border text-gray-700 bg-gray-100"
+                  />
+                  <FaMobileAlt className="absolute right-3 top-2.5 text-gray-400" />
+                  <FaCheck className="absolute left-3 top-3 text-green-500" />
+                </div>
+              </div>
 
-          {errors.otp && <p className="text-red-500 text-sm mb-4">{errors.otp}</p>}
+              <div className="my-4">
+                <label className="block font-semibold mb-2 text-gray-700">
+                  کد یکبار مصرف
+                </label>
+                <div className="flex justify-between" dir="ltr">
+                  {formData.otp.map((_, i, arr) => {
+                    const index = i; // ترتیب از چپ به راست
+                    return (
+                      <input
+                        key={index}
+                        type="text"
+                        maxLength={1}
+                        value={formData.otp[index]}
+                        onChange={(e) => handleOtpChange(index, e.target.value)}
+                        onKeyDown={(e) => {
+                          if (e.key === "Backspace" && !formData.otp[index] && index > 0) {
+                            otpInputs.current[index - 1]?.focus();
+                          }
+                        }}
+                        ref={(el) => {
+                          if (el) {
+                            otpInputs.current[index] = el;
+                          }
+                        }}
+                        className="w-10 h-10 border rounded text-center text-xl focus:ring-2 focus:ring-blue-400 focus:outline-none"
+                      />
+                    );
+                  })}
 
-          <button
-            type="button"
-            onClick={handleVerifyOtp}
-            className="w-full py-2 bg-green-600 hover:bg-green-700 text-white rounded-lg"
-          >
-            تایید کد
-          </button>
+                </div>
+                {errors.otp && (
+                  <p className="text-sm text-red-500 mt-1">{errors.otp}</p>
+                )}
+                <p className="text-sm text-gray-500 mt-3">
+                  کد به شماره {formData.phoneNumber} ارسال شد
+                </p>
+              </div>
 
-          <div className="mt-4 text-center">
-            <p className="text-gray-600 text-sm">
-              {timer > 0 ? `ارسال مجدد بعد از ${timer} ثانیه` : (
+              {timer > 0 && (
+                <div className="text-center my-4">
+                  <p className="text-gray-700">
+                    زمان باقیمانده: {Math.floor(timer / 60)}:{timer % 60 < 10 ? '0' : ''}{timer % 60}
+                  </p>
+                </div>
+              )}
+
+              {timer === 0 && (
                 <button
-                  onClick={handleResendOtp}
-                  disabled={isResendDisabled}
-                  className={`text-blue-600 underline ${isResendDisabled ? "opacity-50 cursor-not-allowed" : ""}`}
+                  type="button"
+                  onClick={handleSendOtp}
+                  className="text-blue-500 text-sm mt-2"
                 >
                   ارسال مجدد کد
                 </button>
               )}
-            </p>
+
+              <button
+                type="submit"
+                className={`w-full bg-blue-600 hover:bg-blue-700 text-white py-2 rounded-md font-semibold transition mt-4 ${
+                  isLoading ? "opacity-70 cursor-not-allowed" : ""
+                }`}
+                disabled={isLoading}
+              >
+                {isLoading ? "در حال پردازش..." : "تایید کد"}
+              </button>
+            </form>
+          )}
+
+          {/* فرم تکمیل پروفایل */}
+          {loginMode === "profile" && (
+            <div className="mt-4">
+              <div className="space-y-4">
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">نام</label>
+                  <div className="relative">
+                    <input
+                      type="text"
+                      value={profileData.firstName}
+                      onChange={(e) =>
+                        setProfileData({ ...profileData, firstName: e.target.value })
+                      }
+                      className="w-full p-2 pl-10 border border-gray-300 rounded"
+                    />
+                    <FaUser className="absolute left-3 top-3 text-gray-400" />
+                  </div>
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">نام خانوادگی</label>
+                  <div className="relative">
+                    <input
+                      type="text"
+                      value={profileData.lastName}
+                      onChange={(e) =>
+                        setProfileData({ ...profileData, lastName: e.target.value })
+                      }
+                      className="w-full p-2 pl-10 border border-gray-300 rounded"
+                    />
+                    <FaUser className="absolute left-3 top-3 text-gray-400" />
+                  </div>
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">کد ملی</label>
+                  <div className="relative">
+                    <input
+                      type="text"
+                      value={profileData.nationalCode}
+                      onChange={(e) =>
+                        setProfileData({ ...profileData, nationalCode: e.target.value })
+                      }
+                      className="w-full p-2 pl-10 border border-gray-300 rounded"
+                    />
+                    <FaIdCard className="absolute left-3 top-3 text-gray-400" />
+                  </div>
+                </div>
+
+
+                <div className="grid grid-cols-2 gap-4">
+            <div>
+              <ComboBox
+                label="استان"
+                apiEndpoint="Provinces"
+                selectedValue={
+                  profileData.provinceId
+                    ? { id: profileData.provinceId, name: profileData.provinceName }
+                    : null
+                }
+                onChange={(option) => {
+                  setProfileData((prev) => ({
+                    ...prev,
+                    provinceId: option.id,
+                    provinceName: option.name,
+                    cityId: '',
+                    cityName: '',
+                    schoolId: '',
+                  }));
+                  setSchools([]);
+                }}
+              />
+            </div>
+            <div>
+              <ComboBox
+                label="شهرستان"
+                apiEndpoint="Cities"
+                selectedValue={
+                  profileData.cityId ? { id: profileData.cityId, name: profileData.cityName } : null
+                }
+                onChange={(option) => {
+                  setProfileData((prev) => ({
+                    ...prev,
+                    cityId: option.id,
+                    cityName: option.name,
+                    schoolId: '',
+                  }));
+                }}
+                disabled={!profileData.provinceId}
+                params={{ provinceId: profileData.provinceId }}
+              />
+            </div>
           </div>
+
+          {/* مدرسه */}
+          <div>
+            <label htmlFor="schoolId" className="block text-sm font-medium text-gray-700 mb-1">
+              نام مدرسه:
+            </label>
+            <select
+              id="schoolId"
+              name="schoolId"
+              value={profileData.schoolId}
+              onChange={handleChange}
+              disabled={!profileData.cityId || schools.length === 0}
+              className="w-full px-3 py-1.5 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm"
+            >
+              <option value="">
+                {profileData.cityId ? 'انتخاب کنید' : 'ابتدا شهر را انتخاب کنید'}
+              </option>
+              {schools.map((school) => (
+                <option key={school.id} value={school.id}>
+                  {school.name}
+                </option>
+              ))}
+            </select>
+          </div>
+                
+
+
+                
+              </div>
+              {errors.profile && <p className="text-red-500 text-sm mt-2">{errors.profile}</p>}
+              <button
+                onClick={handleSaveProfile}
+                disabled={isLoading}
+                className="mt-4 w-full py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg disabled:opacity-70"
+              >
+                {isLoading ? "در حال ذخیره..." : "ذخیره اطلاعات"}
+              </button>
+            </div>
+          )}
         </div>
       </div>
-    );
-  }
 
-  // --- Render Profile Form (for first login) ---
-  if (loginMode === "profile") {
-    return (
-      <div className="flex justify-center items-center h-screen bg-gray-100">
-        <div className="bg-white p-8 rounded-lg shadow-md w-full max-w-md">
-          <h2 className="text-xl font-bold mb-4">ثبت اولیه اطلاعات</h2>
-          <p className="mb-4 text-gray-600">لطفاً اطلاعات خود را کامل کنید.</p>
-
-          <div className="space-y-4">
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">نام و نام خانوادگی</label>
-              <input
-                type="text"
-                value={profileData.fullName}
-                onChange={(e) =>
-                  setProfileData({ ...profileData, fullName: e.target.value })
-                }
-                className="w-full p-2 border border-gray-300 rounded"
-              />
-            </div>
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">کد ملی</label>
-              <input
-                type="text"
-                value={profileData.nationalCode}
-                onChange={(e) =>
-                  setProfileData({ ...profileData, nationalCode: e.target.value })
-                }
-                className="w-full p-2 border border-gray-300 rounded"
-              />
-            </div>
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">شماره تماس</label>
-              <input
-                type="text"
-                value={profileData.phoneNumber}
-                onChange={(e) =>
-                  setProfileData({ ...profileData, phoneNumber: e.target.value })
-                }
-                className="w-full p-2 border border-gray-300 rounded"
-              />
-            </div>
-          </div>
-
-          {errors.profile && <p className="text-red-500 text-sm mt-2">{errors.profile}</p>}
-
-          <button
-            onClick={handleSaveProfile}
-            className="mt-4 w-full py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg"
-          >
-            ذخیره اطلاعات
-          </button>
-        </div>
+       {/* Left Side: Illustration */}
+      <div className="w-1/2 flex items-center justify-center">
+        <img src="/girl.png" alt="فارغ التحصیل" className="max-w-lg" />
       </div>
-    );
-  }
-
-  return null;
+    </div>
+  );
 }
