@@ -4,10 +4,12 @@ import { useRouter, useSearchParams, useParams } from 'next/navigation';
 import axios from 'axios';
 import { FaVolumeUp, FaPlay } from 'react-icons/fa';
 import Image from 'next/image';
-
+import { useAuth } from '../../../../../hooks/useAuth';
 const BASE_URL = 'https://localhost:7086';
 
 export default function TestInstructions() {
+   const { authApiClient} = useAuth();
+
   const router = useRouter();
   const params = useParams(); // برای استخراج path parameters
   const searchParams = useSearchParams(); // برای استخراج query parameters
@@ -35,7 +37,7 @@ export default function TestInstructions() {
 
     const fetchInstructions = async () => {
       try {
-        const response = await axios.get(`${BASE_URL}/api/v1/WorkingMemoryTests/${testId}`);
+        const response = await authApiClient.get(`${BASE_URL}/api/v1/WorkingMemoryTests/${testId}`);
         setInstructions(response.data);
       } catch (err) {
         setError('خطا در دریافت اطلاعات آزمون');

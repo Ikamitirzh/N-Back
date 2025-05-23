@@ -1,7 +1,7 @@
 // ComboBox.jsx
 import React, { useState, useEffect } from "react";
 import axios from "axios";
-
+import { useAuth } from "../hooks/useAuth";
 const BASE_URL = "https://localhost:7086"; // تغییر داده شود به صورت واقعی
 
 export default function ComboBox({
@@ -12,6 +12,7 @@ export default function ComboBox({
   disabled = false,
   className = ""
 }) {
+  const { authApiClient} = useAuth();
   const [isOpen, setIsOpen] = useState(false);
   const [searchTerm, setSearchTerm] = useState("");
   const [options, setOptions] = useState([]);
@@ -33,7 +34,7 @@ export default function ComboBox({
     if (isOpen && !disabled) {
       const fetchOptions = async () => {
         try {
-          const response = await axios.get(`${BASE_URL}/api/v1/admin/${apiEndpoint}`, {
+          const response = await authApiClient.get(`${BASE_URL}/api/v1/admin/${apiEndpoint}`, {
             params: { SearchTerm: searchTerm },
           });
           setOptions(response.data.items || response.data);

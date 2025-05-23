@@ -2,40 +2,46 @@
 'use client';
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
-import axios from 'axios';
 import Image from 'next/image';
-import axiosInstance from '../../../../utils/api';
 import { useAuth } from '../../../../hooks/useAuth';
 
-const BASE_URL = 'https://localhost:7086';
-
 export default function TestSelection() {
-
   const router = useRouter();
   const [tests, setTests] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
-
-  const { apiClient } = useAuth();
+  const { authApiClient, user, isLoading: authLoading } = useAuth();
+  
+  // اگر کاربر لاگین نکرده باشد، به صفحه لاگین هدایت شود
+  useEffect(() => {
+    if (!authLoading && !user) {
+      router.push('/userLogin');
+    }
+  }, [user, authLoading, router]);
 
   // دریافت لیست آزمون‌ها
   useEffect(() => {
     const fetchTests = async () => {
+      if (!user) return; // اگر کاربر لاگین نکرده باشد، درخواست ارسال نشود
+      
       try {
-        // استفاده از apiClient به جای axios خام
-        const response = await apiClient.get('/api/v1/WorkingMemoryTests');
+        setLoading(true);
+        const response = await authApiClient.get('/api/v1/WorkingMemoryTests');
         setTests(response.data);
       } catch (err) {
         console.error('Error fetching tests:', err);
+        setError('خطا در دریافت آزمون‌ها. لطفاً دوباره تلاش کنید.');
+        if (err.response?.status === 401) {
+          router.push('/userLogin'); // اگر توکن نامعتبر بود به صفحه لاگین هدایت شود
+        }
       } finally {
         setLoading(false);
       }
     };
 
     fetchTests();
-  }, []);
+  }, [user, authApiClient, router]);
 
-  // تبدیل type به نام آزمون
   const getTestName = (type) => {
     switch (type) {
       case 0: return '1-back';
@@ -45,7 +51,6 @@ export default function TestSelection() {
     }
   };
 
-  // بررسی وضعیت آزمون
   const getTestStatus = (status) => {
     switch (status) {
       case 0: return { text: 'غیرفعال', color: 'text-gray-400', disabled: true };
@@ -56,23 +61,29 @@ export default function TestSelection() {
     }
   };
 
-  // شروع آزمون
   const startTest = (testId, testType) => {
     router.push(`/pages/test/test-instructions/${testId}?type=${testType}`);
   };
 
-  // مرتب‌سازی آزمون‌ها
   const sortedTests = [...tests].sort((a, b) => a.order - b.order);
 
+  if (authLoading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-500"></div>
+      </div>
+    );
+  }
+
   return (
-    <div className="min-h-screen flex flex-col items-center justify-center bg-gray-50 p-4">
+    <div className="min-h-screen flex flex-col items-center justify-center p-4 relative">
       {/* Background Image */}
       <div className="absolute inset-0 z-0">
         <Image
           src="/background.png"
           alt="Background"
-          layout="fill"
-          objectFit="cover"
+          fill
+          style={{ objectFit: "cover" }}
           quality={100}
         />
       </div>
@@ -97,10 +108,10 @@ export default function TestSelection() {
                 <div
                   key={test.id}
                   onClick={() => !status.disabled && startTest(test.id, test.type)}
-                  className={`border rounded-lg p-4 transition-all duration-200   ${
+                  className={`border rounded-lg p-4 transition-all duration-200 ${
                     status.disabled
-                      ? 'bg-gray-50 cursor-not-allowed text-black'
-                      : `bg-blue-600 hover:bg-blue-800 cursor-pointer text-white`
+                      ? 'bg-gray-50 cursor-not-allowed'
+                      : 'bg-blue-600 hover:bg-blue-800 cursor-pointer text-white'
                   }`}
                 >
                   <div className="flex flex-col items-center text-center">

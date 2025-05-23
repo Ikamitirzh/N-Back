@@ -2,12 +2,13 @@
 'use client';
 import { useState, useEffect, useRef } from 'react';
 import { useSearchParams, useRouter } from 'next/navigation';
-import axios from 'axios';
 
+import { useAuth } from '../../../../hooks/useAuth';
 
 const BASE_URL = 'https://localhost:7086';
 
 export default function TestScreen() {
+  const { authApiClient} = useAuth();
   const router = useRouter();
   const searchParams = useSearchParams();
   const testId = searchParams.get('id');
@@ -26,7 +27,7 @@ export default function TestScreen() {
   useEffect(() => {
     const fetchTerms = async () => {
       try {
-        const response = await axios.get(`${BASE_URL}/api/v1/WorkingMemoryTerms/${testId}`);
+        const response = await authApiClient.get(`${BASE_URL}/api/v1/WorkingMemoryTerms/${testId}`);
         setTerms(response.data);
         // پیدا کردن اولین سوال بدون پاسخ
         const firstUnanswered = response.data.findIndex(term => term.userResponseDetails === null);
@@ -77,7 +78,7 @@ export default function TestScreen() {
   // انصراف از آزمون
   const cancelTest = async () => {
     try {
-      await axios.delete(`${BASE_URL}/api/v1/WorkingMemoryResponses/${testId}`);
+      await authApiClient.delete(`${BASE_URL}/api/v1/WorkingMemoryResponses/${testId}`);
       router.push('/pages/test/test-selection');
     } catch (err) {
       console.error('Error cancelling test:', err);
@@ -93,7 +94,7 @@ export default function TestScreen() {
     const responseTime = endTime - startTimeRef.current;
 
     try {
-      await axios.post(`${BASE_URL}/api/v1/WorkingMemoryResponses/${testId}`, {
+      await authApiClient.post(`${BASE_URL}/api/v1/WorkingMemoryResponses/${testId}`, {
         termId: currentTerm.id,
         isTarget,
         responseTime
@@ -122,9 +123,9 @@ export default function TestScreen() {
   const handleTimeUp = () => {
     clearInterval(timerRef.current);
     const currentTerm = terms[currentTermIndex];
-    
+    console.log(`currentTerm ${currentTerm.userResponseDetails}`)
     if (currentTerm?.userResponseDetails === null) {
-      axios.post(`${BASE_URL}/api/v1/WorkingMemoryResponses/${testId}`, {
+      authApiClient.post(`${BASE_URL}/api/v1/WorkingMemoryResponses/${testId}`, {
         termId: currentTerm.id,
         responseTime: 3000 // حداکثر زمان پاسخ
       });

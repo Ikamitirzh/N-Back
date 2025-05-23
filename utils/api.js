@@ -1,26 +1,24 @@
 // utils/api.js
 import axios from "axios";
+import { authApiClient } from "../hooks/useAuth";
 
 const BASE_URL = "https://localhost:7086";
 
-// Interceptor برای افزودن Access Token به تمام درخواست‌ها
-axios.interceptors.request.use(
-  (config) => {
-    const accessToken = localStorage.getItem("accessToken");
-    if (accessToken) {
-      config.headers.Authorization = `Bearer ${accessToken}`;
-    }
-    return config;
-  },
-  (error) => Promise.reject(error)
-);
+// ایجاد یک نمونه axios جداگانه برای درخواست‌های عمومی
+export const publicApi = axios.create({
+  baseURL: BASE_URL,
+  headers: {
+    'Content-Type': 'application/json'
+  }
+});
 
+// ==================== بخش مدیریتی (ادمین) ====================
 // ۱. نمایش لیست مدارس
 export const fetchSchools = async (filters) => {
   try {
-    console.log(`فیلتر ها ${filters.level}`)
-    const response = await axios.get(`${BASE_URL}/api/v1/admin/Schools`, { params: filters });
-    
+    const response = await authApiClient.get(`${BASE_URL}/api/v1/admin/Schools`, { 
+      params: filters 
+    });
     return response.data;
   } catch (error) {
     console.error("Error fetching schools:", error);
@@ -31,7 +29,7 @@ export const fetchSchools = async (filters) => {
 // ۲. افزودن مدرسه جدید
 export const addSchool = async (schoolData) => {
   try {
-    const response = await axios.post(`${BASE_URL}/api/v1/admin/Schools`, schoolData);
+    const response = await authApiClient.post(`${BASE_URL}/api/v1/admin/Schools`, schoolData);
     return response.data;
   } catch (error) {
     console.error("Error adding school:", error);
@@ -41,10 +39,8 @@ export const addSchool = async (schoolData) => {
 
 // ۳. مشاهده جزئیات مدرسه
 export const getSchoolDetails = async (id) => {
-  console.log(id)
   try {
-    const response = await axios.get(`${BASE_URL}/api/v1/admin/Schools/${id}`);
-    console.log(response.data)
+    const response = await authApiClient.get(`${BASE_URL}/api/v1/admin/Schools/${id}`);
     return response.data;
   } catch (error) {
     console.error("Error getting school details:", error);
@@ -55,7 +51,7 @@ export const getSchoolDetails = async (id) => {
 // ۴. ویرایش مدرسه
 export const updateSchool = async (schoolId, updatedData) => {
   try {
-    const response = await axios.put(`${BASE_URL}/api/v1/admin/Schools/${schoolId}`, updatedData);
+    const response = await authApiClient.put(`${BASE_URL}/api/v1/admin/Schools/${schoolId}`, updatedData);
     return response.data;
   } catch (error) {
     console.error("Error updating school:", error);
@@ -66,7 +62,7 @@ export const updateSchool = async (schoolId, updatedData) => {
 // ۵. حذف مدرسه
 export const deleteSchool = async (schoolId) => {
   try {
-    const response = await axios.delete(`${BASE_URL}/api/v1/admin/Schools/${schoolId}`);
+    const response = await authApiClient.delete(`${BASE_URL}/api/v1/admin/Schools/${schoolId}`);
     return response.data;
   } catch (error) {
     console.error("Error deleting school:", error);
@@ -74,22 +70,13 @@ export const deleteSchool = async (schoolId) => {
   }
 };
 
-
-
-
-
-
+// ==================== توابع مشترک ====================
 export const apiLogout = async () => {
   try {
     const refreshToken = localStorage.getItem("refreshToken");
     if (!refreshToken) throw new Error("Refresh token not found");
 
-    await axios.post(`${BASE_URL}/api/v1/admin/Auth/logout`, { refreshToken });
-    
-    localStorage.removeItem("accessToken");
-    localStorage.removeItem("refreshToken");
-    
-    window.location.href = "/login";
+    await authApiClient.post(`${BASE_URL}/api/v1/Auth/logout`, { refreshToken });
   } catch (error) {
     console.error("Error logging out:", error);
     throw error;
@@ -98,7 +85,7 @@ export const apiLogout = async () => {
 
 export const getProvinceIdByName = async (provinceName) => {
   try {
-    const response = await axios.get(`${BASE_URL}/api/v1/admin/Provinces`, {
+    const response = await authApiClient.get(`${BASE_URL}/api/v1/admin/Provinces`, {
       params: { SearchTerm: provinceName },
     });
     
@@ -112,9 +99,10 @@ export const getProvinceIdByName = async (provinceName) => {
     return null;
   }
 };
+
 export const getCityIdByName = async (cityName, provinceId) => {
   try {
-    const response = await axios.get(`${BASE_URL}/api/v1/admin/Cities`, {
+    const response = await authApiClient.get(`${BASE_URL}/api/v1/admin/Cities`, {
       params: { 
         SearchTerm: cityName,
         ProvinceId: provinceId 
@@ -132,27 +120,37 @@ export const getCityIdByName = async (cityName, provinceId) => {
   }
 };
 
-
-
-
-
-
-// =================================================================user===========================================================
+// ==================== بخش کاربران عادی ====================
 export const fetchProvinces = async () => {
-  const response = await api.get("/api/v1/Provinces");
-  return response.data.items || response.data;
+  try {
+    const response = await publicApi.get("/api/v1/Provinces");
+    return response.data.items || response.data;
+  } catch (error) {
+    console.error("Error fetching provinces:", error);
+    throw error;
+  }
 };
 
 export const fetchCities = async (provinceId) => {
-  const response = await api.get("/api/v1/Cities", {
-    params: { parentId: provinceId },
-  });
-  return response.data.items || response.data;
+  try {
+    const response = await publicApi.get("/api/v1/Cities", {
+      params: { parentId: provinceId },
+    });
+    return response.data.items || response.data;
+  } catch (error) {
+    console.error("Error fetching cities:", error);
+    throw error;
+  }
 };
 
 export const fetchSchoolsUser = async (cityId) => {
-  const response = await api.get("/api/v1/Schools", {
-    params: { parentId: cityId },
-  });
-  return response.data.items || response.data;
+  try {
+    const response = await publicApi.get("/api/v1/Schools", {
+      params: { parentId: cityId },
+    });
+    return response.data.items || response.data;
+  } catch (error) {
+    console.error("Error fetching schools:", error);
+    throw error;
+  }
 };

@@ -2,16 +2,16 @@
 'use client';
 import { useState, useEffect } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
-import axios from 'axios';
-import Image from 'next/image';
 
+import Image from 'next/image';
+import { useAuth } from '../../../../hooks/useAuth';
 const BASE_URL = 'https://localhost:7086';
 
 export default function TestResults() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const testId = searchParams.get('id');
-
+  const { authApiClient} = useAuth();
   const [results, setResults] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
@@ -20,7 +20,7 @@ export default function TestResults() {
   useEffect(() => {
     const fetchResults = async () => {
       try {
-        const response = await axios.get(`${BASE_URL}/api/v1/WorkingMemoryResponses/${testId}`);
+        const response = await authApiClient.get(`${BASE_URL}/api/v1/WorkingMemoryResponses/${testId}`);
         setResults(response.data);
       } catch (err) {
         setError('خطا در دریافت نتایج آزمون');
@@ -37,7 +37,7 @@ export default function TestResults() {
   const handleLogout = async () => {
     try {
       const refreshToken = localStorage.getItem('refreshToken');
-      await axios.post(`${BASE_URL}/api/v1/Auth/logout`, { refreshToken });
+      await authApiClient.post(`${BASE_URL}/api/v1/Auth/logout`, { refreshToken });
 
       // پاک کردن توکن‌ها از localStorage
       localStorage.removeItem('accessToken');

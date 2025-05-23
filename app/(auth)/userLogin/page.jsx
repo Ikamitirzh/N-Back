@@ -5,23 +5,27 @@ import { useRouter } from 'next/navigation';
 import { useAuth } from "../../../hooks/useAuth";
 import Image from 'next/image';
 import ComboBox from "../../../components/ComboBoxUser";
-const BASE_URL = "https://localhost:7086";
-import axios from 'axios';
 
 export default function StudentLogin() {
-  const { studentLogin, setupAxiosInterceptor } = useAuth();
+  const { 
+    studentLogin, 
+    authApiClient, 
+    isLoading: authLoading,
+    user
+  } = useAuth();
   const router = useRouter();
+  
   const [formData, setFormData] = useState({
     phoneNumber: '',
     firstName: '',
     lastName: '',
     age: '',
-    gender: 0, // Default to "مرد" (value: 1)
+    gender: 0,
     isRightHanded: true,
     provinceId: '',
     cityId: '',
     schoolId: '',
-    provinceName: '', // Added to store names for ComboBox
+    provinceName: '',
     cityName: '',
   });
 
@@ -29,22 +33,30 @@ export default function StudentLogin() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
 
+  // اگر کاربر قبلا لاگین کرده باشد، به صفحه اصلی هدایت شود
+//  useEffect(() => {
+//     if (!authLoading && user) {
+//       router.push('/pages/test/test-selection');
+//     }
+//   }, [user, authLoading, router]);
+
   // Fetch schools based on selected city
   useEffect(() => {
     const fetchSchools = async () => {
       if (formData.cityId) {
         try {
-          const response = await axios.get(`${BASE_URL}/api/v1/Schools`, {
+          const response = await authApiClient.get('/api/v1/Schools', {
             params: { cityId: formData.cityId },
           });
           setSchools(response.data.items || response.data);
         } catch (error) {
           console.error("Error fetching schools:", error);
+          setSchools([]);
         }
       }
     };
     fetchSchools();
-  }, [formData.cityId]);
+  }, [formData.cityId, authApiClient]);
 
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -55,14 +67,15 @@ export default function StudentLogin() {
   };
 
   const handleSubmit = async (e) => {
-    
     e.preventDefault();
     setLoading(true);
     setError('');
 
     try {
       const payload = {
-        ...formData,
+        phoneNumber: formData.phoneNumber,
+        firstName: formData.firstName,
+        lastName: formData.lastName,
         age: parseInt(formData.age),
         gender: parseInt(formData.gender),
         isRightHanded: formData.isRightHanded === 'true',
@@ -70,15 +83,22 @@ export default function StudentLogin() {
       };
 
       await studentLogin(payload);
-      
       router.push('/pages/test/test-selection');
     } catch (err) {
-      setError('خطا در ورود. لطفاً اطلاعات را بررسی کنید.');
+      setError(err.response?.data?.message || 'خطا در ورود. لطفاً اطلاعات را بررسی کنید.');
       console.error('Login error:', err);
     } finally {
       setLoading(false);
     }
   };
+
+  if (authLoading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-500"></div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-gray-50 relative overflow-hidden">
@@ -87,11 +107,10 @@ export default function StudentLogin() {
         <Image
           src="/background.png"
           alt="Background"
-          layout="fill"
-          style={{ objectFit: "cover" }} // ← این جایگزین objectFit می‌شود
+          fill
+          style={{ objectFit: "cover" }}
           quality={100}
         />
-
       </div>
 
       {/* Form Container */}
@@ -319,7 +338,13 @@ export default function StudentLogin() {
       </div>
 
       <div className="w-1/2 flex items-center justify-center p-4 z-10">
-        <Image src="/Online-test-rafiki.png" alt="کاربر در حال کار" width={500} height={500} />
+        <Image 
+          src="/Online-test-rafiki.png" 
+          alt="کاربر در حال کار" 
+          width={500} 
+          height={500} 
+          priority
+        />
       </div>
     </div>
   );

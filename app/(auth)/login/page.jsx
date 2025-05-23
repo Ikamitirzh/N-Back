@@ -1,13 +1,13 @@
 "use client";
 import React, { useState, useRef, useEffect } from "react";
-import axios from "axios";
+
 import { useRouter } from "next/navigation";
 import { FaMobileAlt, FaLock, FaCheck, FaUser, FaIdCard, FaSchool } from "react-icons/fa";
 import { HiEye, HiEyeOff, HiArrowLeft, HiX } from "react-icons/hi";
 import { useAuth } from "../../../hooks/useAuth";
 import ComboBox from "../../../components/ComboBoxUser";
-const BASE_URL = "https://localhost:7086";
 
+const BASE_URL = "https://localhost:7086";
 export default function PrincipalLogin() {
   const router = useRouter();
   const [loginMode, setLoginMode] = useState("otp");
@@ -18,6 +18,7 @@ export default function PrincipalLogin() {
     otp: Array(5).fill(""),
   });
 
+    const { authApiClient} = useAuth();
     console.log(formData.phoneNumber)
   const [profileData, setProfileData] = useState({
     firstName: "",
@@ -52,7 +53,7 @@ export default function PrincipalLogin() {
     const fetchSchools = async () => {
       if (profileData.cityId) {
         try {
-          const response = await axios.get(`${BASE_URL}/api/v1/Schools`, {
+          const response = await authApiClient.get(`${BASE_URL}/api/v1/Schools`, {
             params: { cityId: profileData.cityId },
           });
           setSchools(response.data.items || response.data);
@@ -124,7 +125,7 @@ export default function PrincipalLogin() {
     }
     setIsLoading(true);
     try {
-      await axios.put(`${BASE_URL}/api/v1/school-principal/Profiles`, {
+      await authApiClient.put(`${BASE_URL}/api/v1/school-principal/Profiles`, {
         firstName: profileData.firstName,
         lastName: profileData.lastName,
         nationalCode: profileData.nationalCode,

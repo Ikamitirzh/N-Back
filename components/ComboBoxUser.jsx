@@ -2,7 +2,7 @@
 'use client';
 import React, { useState, useEffect, useRef } from "react";
 import axios from "axios";
-
+import { useAuth } from "../hooks/useAuth";
 const BASE_URL = "https://localhost:7086";
 
 export default function ComboBox({
@@ -14,6 +14,7 @@ export default function ComboBox({
   className = "",
   params = {}
 }) {
+  const { authApiClient} = useAuth();
   const [isOpen, setIsOpen] = useState(false);
   const [searchTerm, setSearchTerm] = useState("");
   const [options, setOptions] = useState([]);
@@ -49,7 +50,7 @@ export default function ComboBox({
         const fetchData = async () => {
         setIsLoading(true);
         try {
-            const response = await axios.get(`${BASE_URL}/api/v1/${apiEndpoint}`, {
+            const response = await authApiClient.get(`${BASE_URL}/api/v1/${apiEndpoint}`, {
             params: { ...params, SearchTerm: searchTerm }
             });
             setOptions(response.data.items || response.data);

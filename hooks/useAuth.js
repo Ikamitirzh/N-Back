@@ -1,13 +1,14 @@
 // hooks/useAuth.js
 import { useState, useEffect } from "react";
 import axios from "axios";
-import { apiLogout } from "../utils/api";
 
 const BASE_URL = "https://localhost:7086";
 const TOKEN_KEY = "accessToken";
 const REFRESH_TOKEN_KEY = "refreshToken";
+const USER_ROLE_KEY = "userRole";
 
-export const apiClient = axios.create({
+// ایجاد یک نمونه axios مخصوص برای احراز هویت
+export const authApiClient = axios.create({
   baseURL: BASE_URL,
   headers: {
     'Content-Type': 'application/json'
@@ -19,42 +20,71 @@ export const useAuth = () => {
   const [accessToken, setAccessToken] = useState("");
   const [refreshToken, setRefreshToken] = useState("");
   const [isFirstLogin, setIsFirstLogin] = useState(false);
-  const [userRole, setUserRole] = useState(null); // 'admin', 'principal', 'student'
+  const [userRole, setUserRole] = useState(null);
+  const [isLoading, setIsLoading] = useState(true);
 
-  // Load tokens from localStorage
+  // بارگذاری توکن‌ها از localStorage هنگام مقداردهی اولیه
   useEffect(() => {
-    const storedAccessToken = localStorage.getItem(TOKEN_KEY);
-    const storedRefreshToken = localStorage.getItem(REFRESH_TOKEN_KEY);
-    const storedRole = localStorage.getItem("userRole");
+    const initializeAuth = async () => {
+      const storedAccessToken = localStorage.getItem(TOKEN_KEY);
+      const storedRefreshToken = localStorage.getItem(REFRESH_TOKEN_KEY);
+      const storedRole = localStorage.getItem(USER_ROLE_KEY);
 
-    if (storedAccessToken && storedRefreshToken && storedRole) {
-      setAccessToken(storedAccessToken);
-      setRefreshToken(storedRefreshToken);
-      setUserRole(storedRole);
-      setUser({ username: "LoggedUser" });
-    }
+      if (storedAccessToken && storedRefreshToken && storedRole) {
+        setAccessToken(storedAccessToken);
+        setRefreshToken(storedRefreshToken);
+        setUserRole(storedRole);
+        setUser({ username: "LoggedUser" });
+        
+        // تنظیم interceptor پس از بارگذاری توکن‌ها
+        setupAxiosInterceptor(authApiClient);
+      }
+      setIsLoading(false);
+    };
+
+    initializeAuth();
   }, []);
 
   // ==================== توابع مشترک ====================
   const logout = async () => {
     try {
-      await apiLogout();
+      await authApiClient.post('/api/v1/Auth/logout', { refreshToken });
+    } catch (error) {
+      console.error("Error in logout:", error);
+    } finally {
       localStorage.removeItem(TOKEN_KEY);
       localStorage.removeItem(REFRESH_TOKEN_KEY);
-      localStorage.removeItem("userRole");
+      localStorage.removeItem(USER_ROLE_KEY);
       setAccessToken("");
       setRefreshToken("");
       setUser(null);
       setUserRole(null);
-    } catch (error) {
-      console.error("Error logging out:", error);
     }
   };
+
+    useEffect(() => {
+    const checkAuth = async () => {
+      const token = localStorage.getItem('accessToken');
+      if (token) {
+        try {
+          // در اینجا می‌توانید یک درخواست برای بررسی اعتبار توکن بزنید
+          setUser({ username: "LoggedUser" });
+        } catch (error) {
+          localStorage.removeItem('accessToken');
+          setUser(null);
+        }
+      }
+      setIsLoading(false);
+    };
+
+    checkAuth();
+  }, []);
+
 
   // ==================== بخش ادمین ====================
   const adminLogin = async (username, password) => {
     try {
-      const response = await axios.post(`${BASE_URL}/api/v1/admin/Auth/login`, {
+      const response = await authApiClient.post(`${BASE_URL}/api/v1/admin/Auth/login`, {
         userName: username,
         password: password,
       });
@@ -72,7 +102,7 @@ export const useAuth = () => {
   // ==================== بخش مدیران ====================
   const sendOtp = async (phoneNumber) => {
     try {
-      const response = await axios.post(
+      const response = await authApiClient.post(
         `${BASE_URL}/api/v1/school-principal/Auth/send-otp`,
         { phoneNumber }
       );
@@ -85,7 +115,7 @@ export const useAuth = () => {
 
   const verifyOtp = async (phoneNumber, otpCode) => {
     try {
-      const response = await axios.post(
+      const response = await authApiClient.post(
         `${BASE_URL}/api/v1/school-principal/Auth/verify-otp`,
         { phoneNumber, otpCode }
       );
@@ -103,21 +133,19 @@ export const useAuth = () => {
   // ==================== بخش کاربران عادی ====================
   const studentLogin = async (studentData) => {
     try {
-      const response = await axios.post(
-        `${BASE_URL}/api/v1/Auth`,
-        {
-          phoneNumber: studentData.phoneNumber,
-          firstName: studentData.firstName,
-          lastName: studentData.lastName,
-          age: parseInt(studentData.age),
-          gender: parseInt(studentData.gender),
-          isRightHanded: studentData.isRightHanded === 'true',
-          schoolId: studentData.schoolId ? parseInt(studentData.schoolId) : 0
-        }
-      );
+      const response = await authApiClient.post('/api/v1/Auth', {
+        phoneNumber: studentData.phoneNumber,
+        firstName: studentData.firstName,
+        lastName: studentData.lastName,
+        age: parseInt(studentData.age),
+        gender: parseInt(studentData.gender),
+        isRightHanded: studentData.isRightHanded === 'true',
+        schoolId: studentData.schoolId ? parseInt(studentData.schoolId) : 0
+      });
 
       const { accessToken, refreshToken } = response.data;
       storeTokens(accessToken, refreshToken, "student");
+      setupAxiosInterceptor(authApiClient);
       return { accessToken, refreshToken };
     } catch (error) {
       console.error("Error in student login:", error);
@@ -129,7 +157,7 @@ export const useAuth = () => {
   const storeTokens = (accessToken, refreshToken, role) => {
     localStorage.setItem(TOKEN_KEY, accessToken);
     localStorage.setItem(REFRESH_TOKEN_KEY, refreshToken);
-    localStorage.setItem("userRole", role);
+    localStorage.setItem(USER_ROLE_KEY, role);
     setAccessToken(accessToken);
     setRefreshToken(refreshToken);
     setUserRole(role);
@@ -137,25 +165,9 @@ export const useAuth = () => {
 
   const refreshAccessToken = async () => {
     try {
-      let endpoint;
-      
-      // انتخاب اندپوینت مناسب بر اساس نقش کاربر
-      switch(userRole) {
-        case 'admin':
-          endpoint = '/api/v1/admin/Auth/refresh-token';
-          break;
-        case 'principal':
-          endpoint = '/api/v1/school-principal/Auth/refresh-token';
-          break;
-        case 'student':
-          endpoint = '/api/v1/Auth/refresh-token';
-          break;
-        default:
-          throw new Error('نقش کاربر نامعتبر است');
-      }
-
-      const response = await axios.post(
-        `${BASE_URL}${endpoint}`,
+      const endpoint = getRefreshEndpoint();
+      const response = await authApiClient.post(
+        endpoint,
         { refreshToken },
         {
           headers: {
@@ -170,24 +182,44 @@ export const useAuth = () => {
       return newAccessToken;
     } catch (error) {
       console.error("Error refreshing token:", error);
-      logout();
+      await logout();
       throw error;
     }
   };
 
-  // Interceptor برای مدیریت توکن منقضی شده
-  const setupAxiosInterceptor = (axiosInstance) => {
-    // اضافه کردن توکن به تمام درخواست‌ها
-    axiosInstance.interceptors.request.use((config) => {
-      const token = localStorage.getItem(TOKEN_KEY);
-      if (token) {
-        config.headers.Authorization = `Bearer ${token}`;
-      }
-      return config;
-    });
+  const getRefreshEndpoint = () => {
+    switch(userRole) {
+      case 'admin':
+        return '/api/v1/admin/Auth/refresh-token';
+      case 'principal':
+        return '/api/v1/school-principal/Auth/refresh-token';
+      case 'student':
+        return '/api/v1/Auth/refresh-token';
+      default:
+        throw new Error('نقش کاربر نامعتبر است');
+    }
+  };
 
-    // مدیریت خطای 401
-    axiosInstance.interceptors.response.use(
+  // Interceptor برای مدیریت توکن
+  const setupAxiosInterceptor = (axiosInstance) => {
+    // حذف interceptorهای قبلی برای جلوگیری از اضافه شدن مکرر
+    axiosInstance.interceptors.request.eject(requestInterceptor);
+    axiosInstance.interceptors.response.eject(responseInterceptor);
+
+    // اضافه کردن توکن به هدر درخواست‌ها
+    requestInterceptor = axiosInstance.interceptors.request.use(
+      (config) => {
+        const token = localStorage.getItem(TOKEN_KEY);
+        if (token) {
+          config.headers.Authorization = `Bearer ${token}`;
+        }
+        return config;
+      },
+      (error) => Promise.reject(error)
+    );
+
+    // مدیریت پاسخ‌های خطا
+    responseInterceptor = axiosInstance.interceptors.response.use(
       (response) => response,
       async (error) => {
         const originalRequest = error.config;
@@ -200,7 +232,7 @@ export const useAuth = () => {
             originalRequest.headers.Authorization = `Bearer ${newAccessToken}`;
             return axiosInstance(originalRequest);
           } catch (refreshError) {
-            logout();
+            await logout();
             return Promise.reject(refreshError);
           }
         }
@@ -210,6 +242,9 @@ export const useAuth = () => {
     );
   };
 
+  // متغیرهای برای نگهداری reference به interceptorها
+  let requestInterceptor;
+  let responseInterceptor;
 
   return {
     user,
@@ -217,21 +252,19 @@ export const useAuth = () => {
     refreshToken,
     isFirstLogin,
     userRole,
+    isLoading,
     
-    // Admin functions
-    adminLogin,
+     adminLogin,
     
     // Principal functions
     sendOtp,
     verifyOtp,
-    
-    // Student functions
+    // توابع احراز هویت
     studentLogin,
-    
-    // Common functions
     logout,
-    refreshAccessToken,
-     apiClient, // اضافه کردن apiClient به خروجی هوک
+    
+    // ابزارها
+    authApiClient,
     setupAxiosInterceptor
   };
 };

@@ -11,12 +11,7 @@ export default function RootLayout({
 }: Readonly<{
   children: React.ReactNode;
 }>) {
-  const { setupAxiosInterceptor, apiClient } = useAuth();
-
-  useEffect(() => {
-    // تنظیم interceptor هنگام بارگذاری برنامه
-    setupAxiosInterceptor(apiClient);
-  }, []);
+  
   return (
     <html lang="fa" dir="rtl">
 
