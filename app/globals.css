@@ -11,6 +11,12 @@
   --admin-login-btn: #E5E7EB;
   --admin-login-btn-hover: #2262C6;
   --Primary-base: #2262C6;
+  --sidebar-buttom: #0A1C38;
+  --sidebar-top: #1B4E9E;
+  --Bg-main: #F4F5FA;
+  --Primary-100: #D3E0F4;
+  --Warning-3:#FFF2CC;
+  --Warning-2:#FFC107;
   
 }
 
@@ -28,10 +34,73 @@
   }
 }
 
+@font-face {
+  font-family: 'IRANSansXFaNum';
+  src: url('/fonts/IRANSansXFaNum-Thin.ttf') format('truetype');
+  font-weight: 100;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: 'IRANSansXFaNum';
+  src: url('/fonts/IRANSansXFaNum-UltraLight.ttf') format('truetype');
+  font-weight: 200;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: 'IRANSansXFaNum';
+  src: url('/fonts/IRANSansXFaNum-Light.ttf') format('truetype');
+  font-weight: 300;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: 'IRANSansXFaNum';
+  src: url('/fonts/IRANSansXFaNum-Regular.ttf') format('truetype');
+  font-weight: 400;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: 'IRANSansXFaNum';
+  src: url('/fonts/IRANSansXFaNum-Medium.ttf') format('truetype');
+  font-weight: 500;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: 'IRANSansXFaNum';
+  src: url('/fonts/IRANSansXFaNum-DemiBold.ttf') format('truetype');
+  font-weight: 600;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: 'IRANSansXFaNum';
+  src: url('/fonts/IRANSansXFaNum-Bold.ttf') format('truetype');
+  font-weight: 700;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: 'IRANSansXFaNum';
+  src: url('/fonts/IRANSansXFaNum-ExtraBold.ttf') format('truetype');
+  font-weight: 800;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: 'IRANSansXFaNum';
+  src: url('/fonts/IRANSansXFaNum-Black.ttf') format('truetype');
+  font-weight: 900;
+  font-display: swap;
+}
+
 body {
   background: var(--background);
   color: var(--foreground);
-  font-family: 'Vazirmatn', Arial, Helvetica, sans-serif;
+  font-family: 'IRANSansXFaNum', sans-serif;
 }
 
 
@@ -60,3 +129,5 @@ body {
 .icon-delete {
   fill: #000; /* رنگ ایکون حذف */
 }
+
+

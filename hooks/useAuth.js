@@ -99,6 +99,25 @@ export const useAuth = () => {
     }
   };
 
+
+
+
+  const adminLogout = async () => {
+    try {
+      await authApiClient.post('/api/v1/admin/Auth/logout', { refreshToken });
+      
+    } catch (error) {
+      console.error("Error in logout:", error);
+    } finally {
+      localStorage.removeItem(TOKEN_KEY);
+      localStorage.removeItem(REFRESH_TOKEN_KEY);
+      localStorage.removeItem(USER_ROLE_KEY);
+      setAccessToken("");
+      setRefreshToken("");
+      setUser(null);
+      setUserRole(null);
+    }
+  };
   // ==================== بخش مدیران ====================
   const sendOtp = async (phoneNumber) => {
     try {
@@ -255,7 +274,7 @@ export const useAuth = () => {
     isLoading,
     
      adminLogin,
-    
+    adminLogout,
     // Principal functions
     sendOtp,
     verifyOtp,

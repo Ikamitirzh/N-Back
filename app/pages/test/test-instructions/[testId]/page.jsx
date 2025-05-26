@@ -26,6 +26,7 @@ export default function TestInstructions() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const [isPlaying, setIsPlaying] = useState(false);
+  const [audio, setAudio] = useState(null);
 
   // دریافت اطلاعات راهنمای آزمون
   useEffect(() => {
@@ -34,6 +35,8 @@ export default function TestInstructions() {
       setLoading(false);
       return;
     }
+
+   
 
     const fetchInstructions = async () => {
       try {
@@ -50,13 +53,38 @@ export default function TestInstructions() {
     fetchInstructions();
   }, [testId]);
 
+   useEffect(() => {
+  if (instructions?.audioPath) {
+    // جایگزینی بک‌اسلش‌ها با اسلش
+    const cleanedPath = instructions.audioPath.replace(/\\/g, '/');
+    const audioUrl = `${BASE_URL}/${cleanedPath}`;
+    const audioFile = new Audio(audioUrl);
+
+    audioFile.addEventListener("ended", () => setIsPlaying(false));
+    setAudio(audioFile);
+
+    return () => {
+      audioFile.pause();
+      audioFile.addEventListener("ended", () => setIsPlaying(false));
+
+    };
+  }
+}, [instructions?.audioPath]);
+
+
   // تابع شروع پخش صوت
-  const playAudio = () => {
-    if (instructions?.audioPath) {
-      setIsPlaying(true);
-      setTimeout(() => setIsPlaying(false), 3000);
-    }
-  };
+const playAudio = () => {
+  if (!audio) return;
+
+  if (isPlaying) {
+    audio.pause();
+    audio.currentTime = 0;
+    setIsPlaying(false);
+  } else {
+    audio.play();
+    setIsPlaying(true);
+  }
+};
 
   // تابع شروع آزمون
   const startTest = () => {
@@ -93,7 +121,7 @@ export default function TestInstructions() {
       {/* Content Container */}
       <div className="relative z-10 bg-white bg-opacity-90 rounded-lg shadow-xl p-8 max-w-150 w-full mx-4 my-7 rtl">
         {/* آیکون صدا در بالای سمت راست کادر */}
-        <div className="flex justify-end mb-4">
+        <div className="flex justify-start mb-6">
           <button
             onClick={playAudio}
             disabled={!instructions?.audioPath}
@@ -104,15 +132,17 @@ export default function TestInstructions() {
             }`}
           >
             {isPlaying ? (
-              <>
-                <span className="ml-2">در حال پخش...</span>
-              </>
-            ) : (
-              <>
-                <FaVolumeUp className=" rounded-full " />
-                
-              </>
-            )}
+  <>
+    <span className="ml-2">در حال پخش...</span>
+    <FaPlay className="" />
+  </>
+) : (
+  <>
+    <FaVolumeUp className="" />
+    
+  </>
+)}
+
           </button>
         </div>
 

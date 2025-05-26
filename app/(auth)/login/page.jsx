@@ -162,7 +162,7 @@ export default function PrincipalLogin() {
   };
 
   return (
-    <div className="flex h-screen bg-gray-50 text-right">
+    <div className="flex h-screen bg-gray-50 text-right font-[IRANSansXFaNum]">
          
     
           {/* Right Side: Login Form */}

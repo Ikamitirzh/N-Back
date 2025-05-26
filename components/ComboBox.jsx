@@ -1,6 +1,5 @@
 // ComboBox.jsx
-import React, { useState, useEffect } from "react";
-import axios from "axios";
+import  { useState, useEffect } from "react";
 import { useAuth } from "../hooks/useAuth";
 const BASE_URL = "https://localhost:7086"; // تغییر داده شود به صورت واقعی
 
@@ -17,17 +16,15 @@ export default function ComboBox({
   const [searchTerm, setSearchTerm] = useState("");
   const [options, setOptions] = useState([]);
   const [selectedOption, setSelectedOption] = useState(null);
-
+  const [internalValue, setInternalValue] = useState(null);
   // Sync selectedValue with selectedOption
-  useEffect(() => {
-    if (selectedValue && typeof selectedValue === 'object') {
-      // setSelectedOption(selectedValue); // اگر selectedValue یک object باشد
-      // setSearchTerm(selectedValue.name || "");
-    } else if (typeof selectedValue === 'string') {
-      setSelectedOption({ name: selectedValue }); // اگر string بود
-      setSearchTerm(selectedValue);
-    }
-  }, [selectedValue]);
+   useEffect(() => {
+  // فقط اگر selectedValue تغییر کرد و با internalValue متفاوت بود، آپدیت کنیم
+  if (selectedValue && (!internalValue || selectedValue.id !== internalValue.id)) {
+    setInternalValue(selectedValue);
+    setSearchTerm(selectedValue.name);
+  }
+}, [selectedValue]);
 
   // Fetch options from API
   useEffect(() => {
@@ -59,13 +56,21 @@ export default function ComboBox({
     }
   };
 
-  const handleSelect = (option) => {
-    // console.log(`option: ${option.id}`)
-    setSelectedOption(option);
-    setSearchTerm(option.name);
-    onChange(option);
-    setIsOpen(false);
-  };
+const handleSelect = (option) => {
+  setInternalValue(option);
+  setSearchTerm(option.name);
+  if (onChange) {
+    // ارسال کل object انتخاب شده به جای فقط مقدار
+    onChange({
+      id: option.id,
+      name: option.name
+    });
+    console.log(option.id , option.name)
+    
+  }
+
+  setIsOpen(false);
+};
 
   return (
     <div className={`relative ${className}`}>
@@ -74,7 +79,7 @@ export default function ComboBox({
       <input
         type="text"
         placeholder={`انتخاب ${label}`}
-        value={selectedOption ? selectedOption.name : searchTerm}
+        value={internalValue?.name || searchTerm}
         onClick={handleInputClick}
         readOnly
         className={`w-full p-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white ${

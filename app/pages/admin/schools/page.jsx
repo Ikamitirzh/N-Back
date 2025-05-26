@@ -1,5 +1,5 @@
 "use client";
-import React, { useEffect, useState } from "react";
+import  { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { Search, X, LogOut, LogIn } from "lucide-react";
 import { FaChartBar, FaPlus, FaSchool } from "react-icons/fa";
@@ -8,7 +8,7 @@ import SchoolModal from "../../../../components/admin/schools/SchoolModal";
 import SchoolDetailsModal from "../../../../components/admin/schools/SchoolDetailsModal";
 import Sidebar from "../../../../components/admin/Sidebar";
 import Header from "../../../../components/admin/Header";
-import { useAuth } from "../../../../hooks/useAuth";
+
 import Pagination from "../../../../components/ui/Pagination";
 import ComboBox from "../../../../components/ComboBox";
 
@@ -22,6 +22,7 @@ export default function SchoolManagementPage() {
     cityId: null,
     cityName: "",
   });
+  
 
   const [searchQuery, setSearchQuery] = useState("");
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
@@ -29,21 +30,25 @@ export default function SchoolManagementPage() {
   const [isDetailsModalOpen, setIsDetailsModalOpen] = useState(false);
   const [selectedSchool, setSelectedSchool] = useState(null);
   const [newSchool, setNewSchool] = useState({
-    name: "",
-    address: "",
-    postalCode: "",
-    telNumber: "",
-    level: 0, // مقدار اولیه رو به 0 تغییر دادیم
-    provinceId: 0,
-    cityId: 0,
-  });
-  console.log(selectedSchool)
+  name: "",
+  address: "",
+  postalCode: "",
+  telNumber: "",
+  level: 0,
+  provinceId: null, // تغییر از 1 به null
+  cityId: null,     // تغییر از 1 به null
+  provinceDetail: null, // اضافه کردن این فیلد
+  cityDetail: null      // اضافه کردن این فیلد
+});
+
+    console.log(JSON.stringify(selectedSchool, null, 2));
+  
   const [totalPages, setTotalPages] = useState(1);
   const [currentPage, setCurrentPage] = useState(filters['Pagination.PageIndex']);
   // const [searchTerm, setSearchTerm] = useState("");
   const [options, setOptions] = useState([]);
 
-  console.log(` اپشن ${options}`)
+  
 
 
   
@@ -58,45 +63,38 @@ export default function SchoolManagementPage() {
     }
   };
 
-  const handleAddSchool = async () => {
-    try {
-      const schoolToSend = {
-        name: newSchool.name,
-        address: newSchool.address,
-        postalCode: newSchool.postalCode,
-        telNumber: newSchool.telNumber,
-        level: parseInt(newSchool.level) || 0, // مطمئن می‌شیم که یه عدد معتبر باشه
-        provinceId: parseInt(newSchool.provinceId) || null,
-        cityId: parseInt(newSchool.cityId) || null,
-      };
-      await addSchool(schoolToSend);
-      setIsAddModalOpen(false);
-      fetchSchoolsData();
-    } catch (error) {
-      console.error("Error adding school:", error);
-      alert("خطا در افزودن مدرسه");
-    }
-  };
+  const handleAddSchool = async (schoolData) => {
+  try {
+    await addSchool(schoolData);
+    setIsAddModalOpen(false);
+    fetchSchoolsData();
+  } catch (error) {
+    console.error("Error adding school:", error);
+    alert("خطا در افزودن مدرسه");
+  }
+};
 
-  const handleUpdateSchool = async () => {
-    try {
-      const provinceId = await getProvinceIdByName(selectedSchool.provinceName);
-      const cityId = await getCityIdByName(selectedSchool.cityName);
-      const updatedSchool = {
-        ...selectedSchool,
-        
-        level: parseInt(selectedSchool.level) || 0, // مطمئن می‌شیم که level یه عدد باشه
-        provinceId: parseInt(provinceId) || null,
-        cityId: parseInt(cityId) || null,
-      };
-      await updateSchool(selectedSchool.id, updatedSchool);
-      setIsEditModalOpen(false);
-      fetchSchoolsData();
-    } catch (error) {
-      console.error("Error updating school:", error);
-    }
-  };
-
+  const handleUpdateSchool = async (updatedData) => {
+  try {
+    const schoolToUpdate = {
+      name: updatedData.name,
+      address: updatedData.address,
+      postalCode: updatedData.postalCode,
+      telNumber: updatedData.telNumber,
+      level: parseInt(updatedData.level) || 0,
+      provinceId: updatedData.provinceId,
+      cityId: updatedData.cityId
+    };
+    
+    console.log("Updating school with:", schoolToUpdate);
+    
+    await updateSchool(selectedSchool.id, schoolToUpdate);
+    setIsEditModalOpen(false);
+    fetchSchoolsData();
+  } catch (error) {
+    console.error("Error updating school:", error);
+  }
+};
   const handleDeleteSchool = async (schoolId) => {
     try {
       await deleteSchool(schoolId);
@@ -107,12 +105,17 @@ export default function SchoolManagementPage() {
   };
 
   const openEditModal = (school) => {
-    setSelectedSchool({
-      ...school,
-      level: parseInt(school.level) || 0, // مطمئن می‌شیم که level یه عدد باشه
-    });
-    setIsEditModalOpen(true);
-  };
+  setSelectedSchool({
+    ...school,
+    level: parseInt(school.level) || 0,
+    // اضافه کردن مقادیر اولیه برای ویرایش
+    provinceId: school.provinceDetail?.id || null,
+    cityId: school.cityDetail?.id || null,
+    provinceName: school.provinceDetail?.name || "",
+    cityName: school.cityDetail?.name || ""
+  });
+  setIsEditModalOpen(true);
+};
 
   const openDetailsModal = async (schoolId) => {
     try {
@@ -150,7 +153,7 @@ export default function SchoolManagementPage() {
           </h2>
           <button
             onClick={() => setIsAddModalOpen(true)}
-            className="bg-blue-600 hover:bg-[var(--Primary-base)] text-white py-2 px-6 rounded-lg flex items-center"
+            className=" bg-[var(--Primary-base)] hover:bg-blue-600 text-white py-2 px-6 rounded-lg flex items-center"
           >
             <FaPlus className="ml-2" /> افزودن مدرسه
           </button>
@@ -164,7 +167,7 @@ export default function SchoolManagementPage() {
                   placeholder="جستجو..."
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
-                  className="w-full bg-gray-100 p-2 pl-10 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                  className="w-full bg-[var(--Bg-main)] p-2 pl-10 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                 />
                 <Search className="absolute left-3 top-2.5 text-gray-400" size={18} />
               </div>
@@ -173,7 +176,7 @@ export default function SchoolManagementPage() {
               <select
                 value={filters.Level}
                 onChange={(e) => setFilters({ ...filters, Level: parseInt(e.target.value) })}
-                className="w-full py-2.5 bg-gray-100 px-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                className="w-full py-2 bg-[var(--Bg-main)] px-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
               >
                 <option value="0">ابتدایی</option>
                 <option value="1">متوسطه اول</option>
@@ -193,7 +196,7 @@ export default function SchoolManagementPage() {
                       cityName: city.name,
                     });
                   }}
-                  className="bg-gray-100 flex-1"
+                  className="bg-[var(--Bg-main)] flex-1"
                 />
                 {filters.cityId && (
                   <button
@@ -221,13 +224,13 @@ export default function SchoolManagementPage() {
             </thead>
             <tbody className="bg-white divide-y divide-gray-200">
               {schools.map((school, index) => (
-                <tr key={school.id} className={index % 2 === 0 ? 'bg-white' : 'bg-gray-50'}>
+                <tr key={school.id} className={index % 2 === 0 ? 'bg-white' : 'bg-[var(--Bg-main)]'}>
                   <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">{school.name}</td>
                   <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
                     {school.level === 0 ? "ابتدایی" : school.level === 1 ? "متوسطه اول" : "متوسطه دوم"}
                   </td>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{school.provinceName}</td>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{school.cityName}</td>
+                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{school.provinceDetail.name}</td>
+                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{school.cityDetail.name}</td>
                   <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{school.postalCode}</td>
                   <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{school.telNumber}</td>
                   <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{school.address}</td>
@@ -235,7 +238,7 @@ export default function SchoolManagementPage() {
                     <button
                       onClick={() => openDetailsModal(school.id)}
                       title="مشاهده"
-                      className="p-2 bg-blue-200 text-blue-400 rounded-full hover:bg-blue-600 hover:text-white transition"
+                      className="p-2 bg-[var(--Primary-100)] text-blue-400 rounded-full hover:bg-blue-600 hover:text-white transition"
                     >
                       <svg
                         xmlns="http://www.w3.org/2000/svg"
@@ -260,7 +263,7 @@ export default function SchoolManagementPage() {
                     <button
                       onClick={() => openEditModal(school)}
                       title="ویرایش"
-                      className="p-2 bg-yellow-100 text-yellow-500 rounded-full hover:bg-yellow-500 hover:text-white transition"
+                      className="p-2 bg-[var(--Warning-3)] text-[var(--Warning-2)] rounded-full hover:bg-yellow-500 hover:text-white transition"
                     >
                       <svg
                         xmlns="http://www.w3.org/2000/svg"
@@ -321,24 +324,23 @@ export default function SchoolManagementPage() {
             }
           />
         )}
-        {isEditModalOpen && (
-          <SchoolModal
-            isOpen={isEditModalOpen}
-            onClose={() => setIsEditModalOpen(false)}
-            onSave={handleUpdateSchool}
-            school={selectedSchool}
-            onChange={(field, value) =>
-              setSelectedSchool({ ...selectedSchool, [field]: value })
-            }
-          />
-        )}
-        {isDetailsModalOpen && (
-          <SchoolDetailsModal
-            isOpen={isDetailsModalOpen}
-            onClose={() => setIsDetailsModalOpen(false)}
-            school={selectedSchool}
-          />
-        )}
+        {isAddModalOpen && (
+  <SchoolModal
+    isOpen={isAddModalOpen}
+    onClose={() => setIsAddModalOpen(false)}
+    onSave={handleAddSchool} // حالا مستقیماً داده‌ها رو دریافت می‌کنه
+    school={null} // برای حالت افزودن null می‌فرستیم
+  />
+)}
+
+{isEditModalOpen && (
+  <SchoolModal
+    isOpen={isEditModalOpen}
+    onClose={() => setIsEditModalOpen(false)}
+    onSave={handleUpdateSchool}
+    school={selectedSchool}
+  />
+)}
       </div>
     </div>
   );

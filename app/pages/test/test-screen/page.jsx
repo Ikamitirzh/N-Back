@@ -190,11 +190,9 @@ export default function TestScreen() {
               <img
                 src="/background.png"
                 alt="Background"
-                
-                className="object-cover"
-                quality={100}
-               
+                className="w-full h-full object-cover"
               />
+
             </div>
       {/* دکمه انصراف */}
       <button
@@ -231,7 +229,7 @@ export default function TestScreen() {
 
       {/* دکمه‌های پاسخ (فقط اگر پاسخ داده نشده و سوال اول نیست) */}
       {showResponseButtons && (
-        <div className="flex justify-center space-x-4 mb-6 z-10">
+        <div className="flex justify-center space-x-4 mb-6 z-10 mt-5">
           <button
             onClick={() => submitResponse(false)}
             className="px-6 py-2 bg-red-500 hover:bg-red-600 text-white rounded-md font-medium"
