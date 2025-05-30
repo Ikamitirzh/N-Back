@@ -3,39 +3,68 @@ import { X } from "lucide-react";
 import ComboBox from "../../ComboBox";
 
 export default function SchoolModal({ isOpen, onClose, onSave, school, onChange }) {
+  
   const [formData, setFormData] = useState({
     name: "",
     address: "",
     postalCode: "",
     telNumber: "",
-    level: 0, // مقدار اولیه رو به عدد 0 تنظیم می‌کنیم
+    level: 0,
     provinceId: null,
     cityId: null,
+    provinceName: "",
+    cityName: ""
   });
-  console.log(`form data : ${formData.telNumber}`)
-  useEffect(() => {
-    if (school) {
+
+  const [initialProvince, setInitialProvince] = useState(null);
+  const [initialCity, setInitialCity] = useState(null);
+  
+  console.log(JSON.stringify(formData, null, 2));
+ useEffect(() => {
+  if (school) {
+    // اگر school از طریق ویرایش میاد (دارای provinceDetail و cityDetail)
+    if (school.provinceDetail || school.cityDetail) {
       setFormData({
         name: school.name || "",
         address: school.address || "",
         postalCode: school.postalCode || "",
         telNumber: school.telNumber || "",
-        level: parseInt(school.level) || 0, // مطمئن می‌شیم که level یه عدد باشه
+        level: parseInt(school.level) || 0,
+        provinceId: school.provinceDetail?.id || null,
+        cityId: school.cityDetail?.id || null,
+        provinceName: school.provinceDetail?.name || "",
+        cityName: school.cityDetail?.name || ""
+      });
+    } 
+    // اگر school از طریق افزودن میاد (مقادیر اولیه)
+    else {
+      setFormData({
+        name: school.name || "",
+        address: school.address || "",
+        postalCode: school.postalCode || "",
+        telNumber: school.telNumber || "",
+        level: parseInt(school.level) || 0,
         provinceId: school.provinceId || null,
         cityId: school.cityId || null,
-      });
-    } else {
-      setFormData({
-        name: "",
-        address: "",
-        postalCode: "",
-        telNumber: "",
-        level: 0,
-        provinceId: null,
-        cityId: null,
+        provinceName: "",
+        cityName: ""
       });
     }
-  }, [school]);
+  } else {
+    setFormData({
+      name: "",
+      address: "",
+      postalCode: "",
+      telNumber: "",
+      level: 0,
+      provinceId: null,
+      cityId: null,
+      provinceName: "",
+      cityName: ""
+    });
+  }
+}, [school]);
+
 
   const handleChange = (field, value) => {
     let finalValue = value;
@@ -51,26 +80,39 @@ export default function SchoolModal({ isOpen, onClose, onSave, school, onChange 
   };
 
   const handleProvinceChange = (province) => {
-    const id = parseInt(province.id);
-    setFormData((prev) => ({ ...prev, provinceId: id }));
-    if (onChange) onChange("provinceId", id);
-  };
-
+    console.log(`province ${province.id}`)
+  setFormData(prev => ({
+    ...prev,
+    provinceId: province.id,
+    provinceName: province.name,
+    cityId: null, // ریست کردن شهر هنگام تغییر استان
+    cityName: ""
+  }));
+};
   const handleCityChange = (city) => {
-    const id = parseInt(city.id);
-    setFormData((prev) => ({ ...prev, cityId: id }));
-    if (onChange) onChange("cityId", id);
-  };
+  setFormData(prev => ({
+    ...prev,
+    cityId: city.id,
+    cityName: city.name
+    
+  }
+));
+console.log(`city : ${city.id}`)
+};
 
   const handleSubmit = () => {
-    const submitData = {
-      ...formData,
-      level: parseInt(formData.level) || 0,
-      provinceId: parseInt(formData.provinceId) || null,
-      cityId: parseInt(formData.cityId) || null,
-    };
-    onSave(submitData);
+  const submitData = {
+    name: formData.name,
+    address: formData.address,
+    postalCode: formData.postalCode,
+    telNumber: formData.telNumber,
+    level: formData.level,
+    provinceId: formData.provinceId,
+    cityId: formData.cityId
   };
+  
+  onSave(submitData);
+};
 
   if (!isOpen) return null;
 
@@ -116,33 +158,36 @@ export default function SchoolModal({ isOpen, onClose, onSave, school, onChange 
           </div>
 
           <div>
-            
+            <label className="block text-sm font-medium text-gray-700 mb-1">
+              استان <span className="text-red-500">*</span>
+            </label>
             <ComboBox
-              label="استان"
-              apiEndpoint="Provinces"
-              selectedValue={{
-              id: formData.provinceId || "",
-              name: formData.provinceName || school?.provinceName || ""
-              }}
-              onChange={(option) => {
-                handleChange("provinceId", option.id);
-              }}
-            />
+  label="استان"
+  apiEndpoint="Provinces"
+  selectedValue={
+    formData.provinceId && formData.provinceName
+      ? { id: formData.provinceId, name: formData.provinceName }
+      : null
+  }
+  onChange={handleProvinceChange}
+/>
           </div>
 
           <div>
-            
+            <label className="block text-sm font-medium text-gray-700 mb-1">
+              شهرستان <span className="text-red-500">*</span>
+            </label>
             <ComboBox
-              label="شهرستان"
-              apiEndpoint={`Cities?provinceId=${formData.provinceId}`}
-              selectedValue={
-                formData.cityId
-                  ? { id: formData.cityId, name: school?.cityName  }
-                  : null
-              }
-              onChange={handleCityChange}
-              disabled={!formData.provinceId}
-            />
+  label="شهرستان"
+  apiEndpoint={`Cities?provinceId=${formData.provinceId}`}
+  selectedValue={
+    formData.cityId && formData.cityName
+      ? { id: formData.cityId, name: formData.cityName }
+      : null
+  }
+  onChange={handleCityChange}
+  disabled={!formData.provinceId}
+/>
           </div>
 
           <div>
