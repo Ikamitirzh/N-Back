@@ -4,7 +4,7 @@ import { authApiClient } from "../hooks/useAuth";
 
 const BASE_URL = "https://localhost:7086";
 
-// ایجاد یک نمونه axios جداگانه برای درخواست‌های عمومی
+
 export const publicApi = axios.create({
   baseURL: BASE_URL,
   headers: {
@@ -12,8 +12,8 @@ export const publicApi = axios.create({
   }
 });
 
-// ==================== بخش مدیریتی (ادمین) ====================
-// ۱. نمایش لیست مدارس
+// ==================== Management Department (Admin) ====================
+
 export const fetchSchools = async (filters) => {
   try {
     const response = await authApiClient.get(`${BASE_URL}/api/v1/admin/Schools`, { 
@@ -26,7 +26,7 @@ export const fetchSchools = async (filters) => {
   }
 };
 
-// ۲. افزودن مدرسه جدید
+
 export const addSchool = async (schoolData) => {
   try {
     const response = await authApiClient.post(`${BASE_URL}/api/v1/admin/Schools`, schoolData);
@@ -37,7 +37,7 @@ export const addSchool = async (schoolData) => {
   }
 };
 
-// ۳. مشاهده جزئیات مدرسه
+
 export const getSchoolDetails = async (id) => {
   try {
     const response = await authApiClient.get(`${BASE_URL}/api/v1/admin/Schools/${id}`);
@@ -48,7 +48,7 @@ export const getSchoolDetails = async (id) => {
   }
 };
 
-// ۴. ویرایش مدرسه
+
 export const updateSchool = async (schoolId, updatedData) => {
   try {
     const response = await authApiClient.put(`${BASE_URL}/api/v1/admin/Schools/${schoolId}`, updatedData);
@@ -59,7 +59,7 @@ export const updateSchool = async (schoolId, updatedData) => {
   }
 };
 
-// ۵. حذف مدرسه
+
 export const deleteSchool = async (schoolId) => {
   try {
     const response = await authApiClient.delete(`${BASE_URL}/api/v1/admin/Schools/${schoolId}`);
@@ -70,7 +70,7 @@ export const deleteSchool = async (schoolId) => {
   }
 };
 
-// ==================== توابع مشترک ====================
+// ==================== Auxiliary functions ====================
 export const apiLogout = async () => {
   try {
     const refreshToken = localStorage.getItem("refreshToken");
@@ -120,7 +120,7 @@ export const getCityIdByName = async (cityName, provinceId) => {
   }
 };
 
-// ==================== بخش کاربران عادی ====================
+// ==================== user part ====================
 export const fetchProvinces = async () => {
   try {
     const response = await publicApi.get("/api/v1/Provinces");

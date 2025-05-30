@@ -1,4 +1,3 @@
-// src/app/(user)/login/page.jsx
 'use client';
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
@@ -31,16 +30,25 @@ export default function StudentLogin() {
 
   const [schools, setSchools] = useState([]);
   const [loading, setLoading] = useState(false);
-  const [error, setError] = useState('');
+  const [errors, setErrors] = useState({
+    phoneNumber: '',
+    firstName: '',
+    lastName: '',
+    age: '',
+    gender: '',
+    schoolId: '',
+    provinceId: '',
+    cityId: ''
+  });
 
-  // اگر کاربر قبلا لاگین کرده باشد، به صفحه اصلی هدایت شود
-//  useEffect(() => {
-//     if (!authLoading && user) {
-//       router.push('/pages/test/test-selection');
-//     }
-//   }, [user, authLoading, router]);
+  // Redirect if user is already logged in
+  // useEffect(() => {
+  //   if (!authLoading && user) {
+  //     router.push('/pages/test/test-selection');
+  //   }
+  // }, [user, authLoading, router]);
 
-  // Fetch schools based on selected city
+  // Fetch schools when city changes
   useEffect(() => {
     const fetchSchools = async () => {
       if (formData.cityId) {
@@ -58,19 +66,123 @@ export default function StudentLogin() {
     fetchSchools();
   }, [formData.cityId, authApiClient]);
 
+  // اعتبارسنجی‌ها
+  const validatePhoneNumber = (phone) => /^09\d{9}$/.test(phone);
+  const validateAge = (age) => age >= 5 && age <= 100;
+  const validateTextInput = (value) => !/\d/.test(value);
+  const validateNumericInput = (value) => /^\d*$/.test(value);
+
   const handleChange = (e) => {
     const { name, value } = e.target;
-    setFormData((prev) => ({
+    
+    // اعتبارسنجی فیلدهای متنی (نام و نام خانوادگی)
+    if (['firstName', 'lastName'].includes(name)) {
+      if (!validateTextInput(value)) return;
+      setErrors({...errors, [name]: ''});
+    }
+    
+    // اعتبارسنجی شماره موبایل
+    if (name === 'phoneNumber') {
+      if (!validateNumericInput(value)) return;
+      if (value.length > 11) return;
+      setErrors({...errors, phoneNumber: value.length === 11 && !validatePhoneNumber(value) ? 
+        'شماره موبایل نامعتبر است' : ''});
+    }
+    
+    // اعتبارسنجی سن
+    if (name === 'age') {
+      if (!validateNumericInput(value)) return;
+      if (value.length > 3) return;
+      setErrors({...errors, age: value && !validateAge(value) ? 
+        'سن باید بین ۵ تا ۱۰۰ سال باشد' : ''});
+    }
+
+    setFormData(prev => ({ ...prev, [name]: value }));
+  };
+
+  const handleProvinceChange = (province) => {
+    setFormData(prev => ({
       ...prev,
-      [name]: value,
+      provinceId: province.id,
+      provinceName: province.name,
+      cityId: '',
+      cityName: '',
+      schoolId: '',
     }));
+    setSchools([]);
+    setErrors({...errors, provinceId: ''});
+  };
+
+  const handleCityChange = (city) => {
+    setFormData(prev => ({
+      ...prev,
+      cityId: city.id,
+      cityName: city.name,
+      schoolId: '',
+    }));
+    setErrors({...errors, cityId: ''});
+  };
+
+  const validateForm = () => {
+    const newErrors = {};
+    let isValid = true;
+
+    // اعتبارسنجی نام
+    if (!formData.firstName) {
+      newErrors.firstName = 'نام الزامی است';
+      isValid = false;
+    } else if (!validateTextInput(formData.firstName)) {
+      newErrors.firstName = 'نام نمی‌تواند شامل عدد باشد';
+      isValid = false;
+    }
+
+    // اعتبارسنجی نام خانوادگی
+    if (!formData.lastName) {
+      newErrors.lastName = 'نام خانوادگی الزامی است';
+      isValid = false;
+    } else if (!validateTextInput(formData.lastName)) {
+      newErrors.lastName = 'نام خانوادگی نمی‌تواند شامل عدد باشد';
+      isValid = false;
+    }
+
+    // اعتبارسنجی شماره موبایل
+    if (!formData.phoneNumber) {
+      newErrors.phoneNumber = 'شماره موبایل الزامی است';
+      isValid = false;
+    } else if (!validatePhoneNumber(formData.phoneNumber)) {
+      newErrors.phoneNumber = 'شماره موبایل باید 11 رقمی و با 09 شروع شود';
+      isValid = false;
+    }
+
+    // اعتبارسنجی سن
+    if (!formData.age) {
+      newErrors.age = 'سن الزامی است';
+      isValid = false;
+    } else if (!validateAge(formData.age)) {
+      newErrors.age = 'سن باید بین ۵ تا ۱۰۰ سال باشد';
+      isValid = false;
+    }
+
+    // اعتبارسنجی استان و شهر
+    if (!formData.provinceId) {
+      newErrors.provinceId = 'انتخاب استان الزامی است';
+      isValid = false;
+    }
+    if (!formData.cityId) {
+      newErrors.cityId = 'انتخاب شهر الزامی است';
+      isValid = false;
+    }
+
+    setErrors(newErrors);
+    return isValid;
   };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    setLoading(true);
-    setError('');
+    
+    if (!validateForm()) return;
 
+    setLoading(true);
     try {
       const payload = {
         phoneNumber: formData.phoneNumber,
@@ -85,7 +197,7 @@ export default function StudentLogin() {
       await studentLogin(payload);
       router.push('/pages/test/test-selection');
     } catch (err) {
-      setError(err.response?.data?.message || 'خطا در ورود. لطفاً اطلاعات را بررسی کنید.');
+      setErrors({...errors, form: err.response?.data?.message || 'خطا در ورود. لطفاً اطلاعات را بررسی کنید.'});
       console.error('Login error:', err);
     } finally {
       setLoading(false);
@@ -113,22 +225,24 @@ export default function StudentLogin() {
         />
       </div>
 
-      {/* Form Container */}
+      {/* Main Form Container */}
       <div className="relative z-10 bg-white bg-opacity-90 rounded-lg shadow-xl p-6 w-full max-w-md mx-4 my-8 h-auto">
         <h1 className="text-2xl font-bold text-center mb-4 text-gray-800">ورود به آزمون</h1>
 
-        {error && (
+        {/* Error display */}
+        {errors.form && (
           <div className="mb-3 p-2 bg-red-100 text-red-700 rounded-md text-sm">
-            {error}
+            {errors.form}
           </div>
         )}
 
+        {/* Registration Form */}
         <form onSubmit={handleSubmit} className="space-y-3">
-          {/* نام و نام خانوادگی */}
+          {/* First Name and Last Name */}
           <div className="grid grid-cols-2 gap-4">
             <div>
               <label htmlFor="firstName" className="block text-sm font-medium text-gray-700 mb-1">
-                نام:
+                نام <span className="text-red-500">*</span>
               </label>
               <input
                 type="text"
@@ -136,14 +250,18 @@ export default function StudentLogin() {
                 name="firstName"
                 value={formData.firstName}
                 onChange={handleChange}
-                placeholder="مثال: عارفه"
-                className="w-full px-3 py-1.5 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm"
-                required
+                placeholder="مثال: علی"
+                className={`w-full px-3 py-1.5 border rounded-md focus:ring-2 focus:ring-blue-500 text-sm ${
+                  errors.firstName ? "border-red-500" : "border-gray-300"
+                }`}
               />
+              {errors.firstName && (
+                <p className="text-red-500 text-xs mt-1">{errors.firstName}</p>
+              )}
             </div>
             <div>
               <label htmlFor="lastName" className="block text-sm font-medium text-gray-700 mb-1">
-                نام خانوادگی:
+                نام خانوادگی <span className="text-red-500">*</span>
               </label>
               <input
                 type="text"
@@ -151,49 +269,67 @@ export default function StudentLogin() {
                 name="lastName"
                 value={formData.lastName}
                 onChange={handleChange}
-                placeholder="مثال: غلامی"
-                className="w-full px-3 py-1.5 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm"
-                required
+                placeholder="مثال: اکبری"
+                className={`w-full px-3 py-1.5 border rounded-md focus:ring-2 focus:ring-blue-500 text-sm ${
+                  errors.lastName ? "border-red-500" : "border-gray-300"
+                }`}
               />
+              {errors.lastName && (
+                <p className="text-red-500 text-xs mt-1">{errors.lastName}</p>
+              )}
             </div>
           </div>
 
-          {/* شماره موبایل و سن */}
+          {/* Phone Number and Age */}
           <div className="grid grid-cols-2 gap-4">
             <div>
               <label htmlFor="phoneNumber" className="block text-sm font-medium text-gray-700 mb-1">
-                شماره موبایل:
+                شماره موبایل <span className="text-red-500">*</span>
               </label>
+              <div className='relative'>
+              <span className="absolute inset-y-0 left-0 pl-3 flex items-center text-gray-500">
+                ۹۸+
+              </span>
               <input
                 type="tel"
                 id="phoneNumber"
                 name="phoneNumber"
                 value={formData.phoneNumber}
                 onChange={handleChange}
-                placeholder="مثال: ۹۷۱۲۳۴۵۶۷"
-                className="w-full px-3 py-1.5 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm"
-                required
+                placeholder="مثال: 09123456789"
+                className={`w-full px-3 py-1.5 border rounded-md focus:ring-2 focus:ring-blue-500 text-sm pl-15 ${
+                  errors.phoneNumber ? "border-red-500" : "border-gray-300"
+                }`}
               />
+              </div>
+              {errors.phoneNumber && (
+                <p className="text-red-500 text-xs mt-1">{errors.phoneNumber}</p>
+              )}
             </div>
             <div>
               <label htmlFor="age" className="block text-sm font-medium text-gray-700 mb-1">
-                سن:
+                سن <span className="text-red-500">*</span>
               </label>
               <input
                 type="number"
                 id="age"
                 name="age"
+                placeholder="مثال: 10"
                 value={formData.age}
                 onChange={handleChange}
                 min="5"
                 max="100"
-                className="w-full px-3 py-1.5 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm"
-                required
+                className={`w-full px-3 py-1.5 border rounded-md focus:ring-2 focus:ring-blue-500 text-sm ${
+                  errors.age ? "border-red-500" : "border-gray-300"
+                }`}
               />
+              {errors.age && (
+                <p className="text-red-500 text-xs mt-1">{errors.age}</p>
+              )}
             </div>
           </div>
 
-          {/* استان و شهرستان */}
+          {/* Province and City Selection */}
           <div className="grid grid-cols-2 gap-4">
             <div>
               <ComboBox
@@ -204,18 +340,12 @@ export default function StudentLogin() {
                     ? { id: formData.provinceId, name: formData.provinceName }
                     : null
                 }
-                onChange={(option) => {
-                  setFormData((prev) => ({
-                    ...prev,
-                    provinceId: option.id,
-                    provinceName: option.name,
-                    cityId: '',
-                    cityName: '',
-                    schoolId: '',
-                  }));
-                  setSchools([]);
-                }}
+                onChange={handleProvinceChange}
+                error={errors.provinceId}
               />
+              {errors.provinceId && (
+                <p className="text-red-500 text-xs mt-1">{errors.provinceId}</p>
+              )}
             </div>
             <div>
               <ComboBox
@@ -224,21 +354,18 @@ export default function StudentLogin() {
                 selectedValue={
                   formData.cityId ? { id: formData.cityId, name: formData.cityName } : null
                 }
-                onChange={(option) => {
-                  setFormData((prev) => ({
-                    ...prev,
-                    cityId: option.id,
-                    cityName: option.name,
-                    schoolId: '',
-                  }));
-                }}
+                onChange={handleCityChange}
                 disabled={!formData.provinceId}
                 params={{ provinceId: formData.provinceId }}
+                error={errors.cityId}
               />
+              {errors.cityId && (
+                <p className="text-red-500 text-xs mt-1">{errors.cityId}</p>
+              )}
             </div>
           </div>
 
-          {/* مدرسه */}
+          {/* School Selection */}
           <div>
             <label htmlFor="schoolId" className="block text-sm font-medium text-gray-700 mb-1">
               نام مدرسه:
@@ -249,7 +376,9 @@ export default function StudentLogin() {
               value={formData.schoolId}
               onChange={handleChange}
               disabled={!formData.cityId || schools.length === 0}
-              className="w-full px-3 py-1.5 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm"
+              className={`w-full px-3 py-1.5 border rounded-md focus:ring-2 focus:ring-blue-500 text-sm ${
+                errors.schoolId ? "border-red-500" : "border-gray-300"
+              }`}
             >
               <option value="">
                 {formData.cityId ? 'انتخاب کنید' : 'ابتدا شهر را انتخاب کنید'}
@@ -260,14 +389,16 @@ export default function StudentLogin() {
                 </option>
               ))}
             </select>
+            {errors.schoolId && (
+              <p className="text-red-500 text-xs mt-1">{errors.schoolId}</p>
+            )}
           </div>
 
-          {/* جنسیت و دست غالب */}
+          {/* Gender and Handedness Selection */}
           <div className="grid grid-cols-2 gap-4">
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">جنسیت:</label>
+              <label className="block text-sm font-medium text-gray-700 mb-1">جنسیت <span className="text-red-500">*</span>:</label>
               <div className="flex space-x-4">
-
                 <label className="inline-flex items-center">
                   <input
                     type="radio"
@@ -279,7 +410,6 @@ export default function StudentLogin() {
                   />
                   <span className="mr-1 text-sm">مرد</span>
                 </label>
-
                 <label className="inline-flex items-center">
                   <input
                     type="radio"
@@ -288,11 +418,9 @@ export default function StudentLogin() {
                     checked={formData.gender === 1 || formData.gender === "1"}
                     onChange={handleChange}
                     className="text-blue-600 h-4 w-4"
-                    required
                   />
                   <span className="mr-1 text-sm">زن</span>
                 </label>
-                
               </div>
             </div>
             <div>
@@ -324,7 +452,7 @@ export default function StudentLogin() {
             </div>
           </div>
 
-          {/* دکمه ورود */}
+          {/* Submit Button */}
           <button
             type="submit"
             disabled={loading}
@@ -337,6 +465,7 @@ export default function StudentLogin() {
         </form>
       </div>
 
+      {/* Illustration Section */}
       <div className="w-1/2 flex items-center justify-center p-4 z-10">
         <Image 
           src="/Online-test-rafiki.png" 

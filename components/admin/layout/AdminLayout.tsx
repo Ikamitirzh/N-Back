@@ -6,7 +6,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
 
   return (
     <div className="flex min-h-screen bg-gray-50">
-      {/* سایدبار */}
+     
       <div className="w-64 bg-blue-800 text-white p-4">
         <h2 className="text-xl font-bold mb-8">پنل مدیریت</h2>
         <nav className="space-y-2">
@@ -16,13 +16,13 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
           >
             مدارس
           </button>
-          {/* سایر لینک‌ها */}
+          
         </nav>
       </div>
 
-      {/* محتوای اصلی */}
+      
       <div className="flex-1">
-        {/* هدر */}
+        
         <header className="bg-white shadow p-4 flex justify-between items-center">
           <div>خوش آمدید، مدیر</div>
           <button 
@@ -33,7 +33,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
           </button>
         </header>
 
-        {/* محتوا */}
+        
         <main className="p-4">
           {children}
         </main>

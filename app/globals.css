@@ -114,20 +114,17 @@ body {
   width: 24px;
   height: 24px;
   border-radius: 50%;
-  background-color: #FFD700; /* رنگ پس زمینه ایکون‌ها (مشابه عکس) */
+  background-color: #FFD700; 
   margin-right: 8px;
 }
 
-.icon-edit {
-  fill: #000; /* رنگ ایکون ویرایش */
+
+
+
+.no-scrollbar::-webkit-scrollbar {
+  display: none;
 }
-
-.icon-view {
-  fill: #000; /* رنگ ایکون مشاهده */
+.no-scrollbar {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
 }
-
-.icon-delete {
-  fill: #000; /* رنگ ایکون حذف */
-}
-
-

@@ -11,14 +11,14 @@ export default function TestInstructions() {
    const { authApiClient} = useAuth();
 
   const router = useRouter();
-  const params = useParams(); // برای استخراج path parameters
-  const searchParams = useSearchParams(); // برای استخراج query parameters
+  const params = useParams(); 
+  const searchParams = useSearchParams(); 
 
-  // استخراج testId از path parameter
-  const testId = params.testId; // testId در path است
+ 
+  const testId = params.testId; 
 
-  // استخراج type از query parameter
-  const testType = searchParams.get('type'); // type در query است
+  
+  const testType = searchParams.get('type'); 
 
   console.log(`testId: ${testId}, testType: ${testType}`);
 
@@ -28,7 +28,7 @@ export default function TestInstructions() {
   const [isPlaying, setIsPlaying] = useState(false);
   const [audio, setAudio] = useState(null);
 
-  // دریافت اطلاعات راهنمای آزمون
+  
   useEffect(() => {
     if (!testId) {
       setError('آزمون معتبر نیست');
@@ -55,7 +55,7 @@ export default function TestInstructions() {
 
    useEffect(() => {
   if (instructions?.audioPath) {
-    // جایگزینی بک‌اسلش‌ها با اسلش
+    
     const cleanedPath = instructions.audioPath.replace(/\\/g, '/');
     const audioUrl = `${BASE_URL}/${cleanedPath}`;
     const audioFile = new Audio(audioUrl);
@@ -72,7 +72,7 @@ export default function TestInstructions() {
 }, [instructions?.audioPath]);
 
 
-  // تابع شروع پخش صوت
+
 const playAudio = () => {
   if (!audio) return;
 
@@ -86,12 +86,12 @@ const playAudio = () => {
   }
 };
 
-  // تابع شروع آزمون
+  
   const startTest = () => {
     router.push(`/pages/test/test-screen?id=${testId}&type=${testType}`);
   };
 
-  // تابع تبدیل type به نام آزمون
+  
   const getTestName = () => {
     switch (parseInt(testType)) {
       case 0: return '1-back';
@@ -115,12 +115,12 @@ const playAudio = () => {
         />
       </div>
 
-      {/* عنوان قوانین در بالا */}
+     
       <h1 className="text-3xl font-bold text-center mb-6 text-blue-600  z-10"> {getTestName()} قوانین</h1>
 
       {/* Content Container */}
       <div className="relative z-10 bg-white bg-opacity-90 rounded-lg shadow-xl p-8 max-w-150 w-full mx-4 my-7 rtl">
-        {/* آیکون صدا در بالای سمت راست کادر */}
+       
         <div className="flex justify-start mb-6">
           <button
             onClick={playAudio}
@@ -146,7 +146,7 @@ const playAudio = () => {
           </button>
         </div>
 
-        {/* متن راهنما با اسکرول داخلی */}
+        
         <div className="max-h-64 overflow-y-auto mb-6 custom-scrollbar">
           {loading ? (
             <div className="flex justify-center">
@@ -169,7 +169,7 @@ const playAudio = () => {
           )}
         </div>
 
-        {/* دکمه شروع آزمون بزرگتر و رنگ آبی */}
+        
         <div className="pt-4 border-t border-gray-200 text-center">
           <button
             onClick={startTest}
@@ -181,7 +181,7 @@ const playAudio = () => {
         </div>
       </div>
 
-      {/* استایل برای اسکرول بار سفارشی */}
+      
       <style jsx>{`
         .custom-scrollbar::-webkit-scrollbar {
           width: 6px;

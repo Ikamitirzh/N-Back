@@ -7,7 +7,7 @@ const TOKEN_KEY = "accessToken";
 const REFRESH_TOKEN_KEY = "refreshToken";
 const USER_ROLE_KEY = "userRole";
 
-// ایجاد یک نمونه axios مخصوص برای احراز هویت
+
 export const authApiClient = axios.create({
   baseURL: BASE_URL,
   headers: {
@@ -23,7 +23,7 @@ export const useAuth = () => {
   const [userRole, setUserRole] = useState(null);
   const [isLoading, setIsLoading] = useState(true);
 
-  // بارگذاری توکن‌ها از localStorage هنگام مقداردهی اولیه
+  
   useEffect(() => {
     const initializeAuth = async () => {
       const storedAccessToken = localStorage.getItem(TOKEN_KEY);
@@ -36,7 +36,7 @@ export const useAuth = () => {
         setUserRole(storedRole);
         setUser({ username: "LoggedUser" });
         
-        // تنظیم interceptor پس از بارگذاری توکن‌ها
+        
         setupAxiosInterceptor(authApiClient);
       }
       setIsLoading(false);
@@ -67,7 +67,7 @@ export const useAuth = () => {
       const token = localStorage.getItem('accessToken');
       if (token) {
         try {
-          // در اینجا می‌توانید یک درخواست برای بررسی اعتبار توکن بزنید
+          
           setUser({ username: "LoggedUser" });
         } catch (error) {
           localStorage.removeItem('accessToken');
@@ -219,13 +219,13 @@ export const useAuth = () => {
     }
   };
 
-  // Interceptor برای مدیریت توکن
+  
   const setupAxiosInterceptor = (axiosInstance) => {
-    // حذف interceptorهای قبلی برای جلوگیری از اضافه شدن مکرر
+    
     axiosInstance.interceptors.request.eject(requestInterceptor);
     axiosInstance.interceptors.response.eject(responseInterceptor);
 
-    // اضافه کردن توکن به هدر درخواست‌ها
+   
     requestInterceptor = axiosInstance.interceptors.request.use(
       (config) => {
         const token = localStorage.getItem(TOKEN_KEY);
@@ -237,7 +237,7 @@ export const useAuth = () => {
       (error) => Promise.reject(error)
     );
 
-    // مدیریت پاسخ‌های خطا
+   
     responseInterceptor = axiosInstance.interceptors.response.use(
       (response) => response,
       async (error) => {
@@ -261,7 +261,7 @@ export const useAuth = () => {
     );
   };
 
-  // متغیرهای برای نگهداری reference به interceptorها
+  
   let requestInterceptor;
   let responseInterceptor;
 
@@ -278,11 +278,11 @@ export const useAuth = () => {
     // Principal functions
     sendOtp,
     verifyOtp,
-    // توابع احراز هویت
+    // verify functions
     studentLogin,
     logout,
     
-    // ابزارها
+    // tools
     authApiClient,
     setupAxiosInterceptor
   };

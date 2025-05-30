@@ -16,7 +16,7 @@ export default function TestResults() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
 
-  // دریافت نتایج آزمون
+  
   useEffect(() => {
     const fetchResults = async () => {
       try {
@@ -33,17 +33,17 @@ export default function TestResults() {
     fetchResults();
   }, [testId]);
 
-  // تابع خروج از سیستم
+  
   const handleLogout = async () => {
     try {
       const refreshToken = localStorage.getItem('refreshToken');
       await authApiClient.post(`${BASE_URL}/api/v1/Auth/logout`, { refreshToken });
 
-      // پاک کردن توکن‌ها از localStorage
+     
       localStorage.removeItem('accessToken');
       localStorage.removeItem('refreshToken');
 
-      // هدایت به صفحه لاگین
+      
       router.push('/userLogin');
     } catch (err) {
       console.error('Error logging out:', err);
@@ -112,7 +112,7 @@ export default function TestResults() {
           </div>
         </div>
 
-        {/* دکمه‌های اقدام */}
+       
         <div className="flex justify-between space-x-4">
           <button
             onClick={goToTestSelection}

@@ -15,7 +15,7 @@ export default function Header(){
       </svg>
     </div>
         <div>
-          <p className="text-lg font-bold">آرزو غلامی</p>
+          <p className="text-lg font-bold">علی اکبری</p>
           <p className="text-sm">ادمین</p>
         </div>
       </div>

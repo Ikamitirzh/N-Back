@@ -3,7 +3,6 @@ import { X } from "lucide-react";
 import ComboBox from "../../ComboBox";
 
 export default function SchoolModal({ isOpen, onClose, onSave, school, onChange }) {
-  
   const [formData, setFormData] = useState({
     name: "",
     address: "",
@@ -16,103 +15,188 @@ export default function SchoolModal({ isOpen, onClose, onSave, school, onChange 
     cityName: ""
   });
 
-  const [initialProvince, setInitialProvince] = useState(null);
-  const [initialCity, setInitialCity] = useState(null);
-  
-  console.log(JSON.stringify(formData, null, 2));
- useEffect(() => {
-  if (school) {
-    // اگر school از طریق ویرایش میاد (دارای provinceDetail و cityDetail)
-    if (school.provinceDetail || school.cityDetail) {
+  const [errors, setErrors] = useState({
+    name: "",
+    address: "",
+    telNumber: "",
+    provinceId: "",
+    cityId: "",
+    postalCode: ""
+  });
+
+  useEffect(() => {
+    if (school) {
+      if (school.provinceDetail || school.cityDetail) {
+        setFormData({
+          name: school.name || "",
+          address: school.address || "",
+          postalCode: school.postalCode || "",
+          telNumber: school.telNumber || "",
+          level: parseInt(school.level) || 0,
+          provinceId: school.provinceDetail?.id || null,
+          cityId: school.cityDetail?.id || null,
+          provinceName: school.provinceDetail?.name || "",
+          cityName: school.cityDetail?.name || ""
+        });
+      } else {
+        setFormData({
+          name: school.name || "",
+          address: school.address || "",
+          postalCode: school.postalCode || "",
+          telNumber: school.telNumber || "",
+          level: parseInt(school.level) || 0,
+          provinceId: school.provinceId || null,
+          cityId: school.cityId || null,
+          provinceName: "",
+          cityName: ""
+        });
+      }
+    } else {
       setFormData({
-        name: school.name || "",
-        address: school.address || "",
-        postalCode: school.postalCode || "",
-        telNumber: school.telNumber || "",
-        level: parseInt(school.level) || 0,
-        provinceId: school.provinceDetail?.id || null,
-        cityId: school.cityDetail?.id || null,
-        provinceName: school.provinceDetail?.name || "",
-        cityName: school.cityDetail?.name || ""
-      });
-    } 
-    // اگر school از طریق افزودن میاد (مقادیر اولیه)
-    else {
-      setFormData({
-        name: school.name || "",
-        address: school.address || "",
-        postalCode: school.postalCode || "",
-        telNumber: school.telNumber || "",
-        level: parseInt(school.level) || 0,
-        provinceId: school.provinceId || null,
-        cityId: school.cityId || null,
+        name: "",
+        address: "",
+        postalCode: "",
+        telNumber: "",
+        level: 0,
+        provinceId: null,
+        cityId: null,
         provinceName: "",
         cityName: ""
       });
     }
-  } else {
-    setFormData({
+    // Reset errors when modal opens
+    setErrors({
       name: "",
       address: "",
-      postalCode: "",
       telNumber: "",
-      level: 0,
-      provinceId: null,
-      cityId: null,
-      provinceName: "",
-      cityName: ""
+      provinceId: "",
+      cityId: "",
+      postalCode: ""
     });
-  }
-}, [school]);
+  }, [school, isOpen]);
 
+  // اعتبارسنجی‌ها
+  const validatePhoneNumber = (phone) => /^0\d{10}$/.test(phone);
+  const validatePostalCode = (code) => /^\d{10}$/.test(code);
+  const validateTextInput = (value) => !/\d/.test(value);
+  const validateNumericInput = (value) => /^\d*$/.test(value);
 
   const handleChange = (field, value) => {
     let finalValue = value;
 
     if (field === "level") {
       finalValue = parseInt(value);
-      if (isNaN(finalValue)) finalValue = 0; // اگر NaN بود، 0 بذار
-      console.log(`Level changed to: ${finalValue}`); // برای دیباگ
+      if (isNaN(finalValue)) finalValue = 0;
     }
 
-    setFormData((prev) => ({ ...prev, [field]: finalValue }));
+    // اعتبارسنجی فیلدهای متنی (نام مدرسه)
+    if (field === "name") {
+      if (!validateTextInput(value)) return;
+      setErrors({...errors, name: ""});
+    }
+    
+    // اعتبارسنجی شماره تلفن
+    if (field === "telNumber") {
+      if (!validateNumericInput(value)) return;
+      if (value.length > 11) return;
+      setErrors({...errors, telNumber: value.length === 11 && !validatePhoneNumber(value) ? 
+        'شماره تماس باید 11 رقمی و با 0 شروع شود' : ''});
+    }
+    
+    // اعتبارسنجی کد پستی
+    if (field === "postalCode" && value) {
+      if (!validateNumericInput(value)) return;
+      if (value.length > 10) return;
+      setErrors({...errors, postalCode: value.length === 10 ? '' : 'کد پستی باید 10 رقمی باشد'});
+    }
+
+    setFormData(prev => ({ ...prev, [field]: finalValue }));
     if (onChange) onChange(field, finalValue);
   };
 
   const handleProvinceChange = (province) => {
-    console.log(`province ${province.id}`)
-  setFormData(prev => ({
-    ...prev,
-    provinceId: province.id,
-    provinceName: province.name,
-    cityId: null, // ریست کردن شهر هنگام تغییر استان
-    cityName: ""
-  }));
-};
+    setFormData(prev => ({
+      ...prev,
+      provinceId: province.id,
+      provinceName: province.name,
+      cityId: null,
+      cityName: ""
+    }));
+    setErrors({...errors, provinceId: ""});
+  };
+
   const handleCityChange = (city) => {
-  setFormData(prev => ({
-    ...prev,
-    cityId: city.id,
-    cityName: city.name
-    
-  }
-));
-console.log(`city : ${city.id}`)
-};
+    setFormData(prev => ({
+      ...prev,
+      cityId: city.id,
+      cityName: city.name
+    }));
+    setErrors({...errors, cityId: ""});
+  };
+
+  const validateForm = () => {
+    const newErrors = {};
+    let isValid = true;
+
+    // اعتبارسنجی نام مدرسه
+    if (!formData.name.trim()) {
+      newErrors.name = 'نام مدرسه الزامی است';
+      isValid = false;
+    } else if (!validateTextInput(formData.name)) {
+      newErrors.name = 'نام مدرسه نمی‌تواند شامل عدد باشد';
+      isValid = false;
+    }
+
+    // اعتبارسنجی آدرس
+    if (!formData.address.trim()) {
+      newErrors.address = 'آدرس الزامی است';
+      isValid = false;
+    }
+
+    // اعتبارسنجی شماره تماس
+    if (!formData.telNumber) {
+      newErrors.telNumber = 'شماره تماس الزامی است';
+      isValid = false;
+    } else if (!validatePhoneNumber(formData.telNumber)) {
+      newErrors.telNumber = 'شماره تماس باید 11 رقمی و با 0 شروع شود';
+      isValid = false;
+    }
+
+    // اعتبارسنجی استان و شهر
+    if (!formData.provinceId) {
+      newErrors.provinceId = 'انتخاب استان الزامی است';
+      isValid = false;
+    }
+    if (!formData.cityId) {
+      newErrors.cityId = 'انتخاب شهرستان الزامی است';
+      isValid = false;
+    }
+
+    // اعتبارسنجی کد پستی (اختیاری اما اگر وارد شده باید معتبر باشد)
+    if (formData.postalCode && !validatePostalCode(formData.postalCode)) {
+      newErrors.postalCode = 'کد پستی باید 10 رقمی باشد';
+      isValid = false;
+    }
+
+    setErrors(newErrors);
+    return isValid;
+  };
 
   const handleSubmit = () => {
-  const submitData = {
-    name: formData.name,
-    address: formData.address,
-    postalCode: formData.postalCode,
-    telNumber: formData.telNumber,
-    level: formData.level,
-    provinceId: formData.provinceId,
-    cityId: formData.cityId
+    if (!validateForm()) return;
+
+    const submitData = {
+      name: formData.name,
+      address: formData.address,
+      postalCode: formData.postalCode,
+      telNumber: formData.telNumber,
+      level: formData.level,
+      provinceId: formData.provinceId,
+      cityId: formData.cityId
+    };
+    
+    onSave(submitData);
   };
-  
-  onSave(submitData);
-};
 
   if (!isOpen) return null;
 
@@ -153,8 +237,13 @@ console.log(`city : ${city.id}`)
               placeholder="نام مدرسه را وارد کنید"
               value={formData.name}
               onChange={(e) => handleChange("name", e.target.value)}
-              className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 p-2"
+              className={`mt-1 block w-full rounded-md border shadow-sm focus:border-blue-500 focus:ring-blue-500 p-2 ${
+                errors.name ? "border-red-500" : "border-gray-300"
+              }`}
             />
+            {errors.name && (
+              <p className="text-red-500 text-xs mt-1">{errors.name}</p>
+            )}
           </div>
 
           <div>
@@ -162,15 +251,19 @@ console.log(`city : ${city.id}`)
               استان <span className="text-red-500">*</span>
             </label>
             <ComboBox
-  label="استان"
-  apiEndpoint="Provinces"
-  selectedValue={
-    formData.provinceId && formData.provinceName
-      ? { id: formData.provinceId, name: formData.provinceName }
-      : null
-  }
-  onChange={handleProvinceChange}
-/>
+              label="استان"
+              apiEndpoint="Provinces"
+              selectedValue={
+                formData.provinceId && formData.provinceName
+                  ? { id: formData.provinceId, name: formData.provinceName }
+                  : null
+              }
+              onChange={handleProvinceChange}
+              error={errors.provinceId}
+            />
+            {errors.provinceId && (
+              <p className="text-red-500 text-xs mt-1">{errors.provinceId}</p>
+            )}
           </div>
 
           <div>
@@ -178,16 +271,20 @@ console.log(`city : ${city.id}`)
               شهرستان <span className="text-red-500">*</span>
             </label>
             <ComboBox
-  label="شهرستان"
-  apiEndpoint={`Cities?provinceId=${formData.provinceId}`}
-  selectedValue={
-    formData.cityId && formData.cityName
-      ? { id: formData.cityId, name: formData.cityName }
-      : null
-  }
-  onChange={handleCityChange}
-  disabled={!formData.provinceId}
-/>
+              label="شهرستان"
+              apiEndpoint={`Cities?provinceId=${formData.provinceId}`}
+              selectedValue={
+                formData.cityId && formData.cityName
+                  ? { id: formData.cityId, name: formData.cityName }
+                  : null
+              }
+              onChange={handleCityChange}
+              disabled={!formData.provinceId}
+              error={errors.cityId}
+            />
+            {errors.cityId && (
+              <p className="text-red-500 text-xs mt-1">{errors.cityId}</p>
+            )}
           </div>
 
           <div>
@@ -196,11 +293,17 @@ console.log(`city : ${city.id}`)
             </label>
             <input
               type="text"
-              placeholder="کد پستی"
+              placeholder="کد پستی (10 رقم)"
               value={formData.postalCode}
               onChange={(e) => handleChange("postalCode", e.target.value)}
-              className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 p-2"
+              maxLength={10}
+              className={`mt-1 block w-full rounded-md border shadow-sm focus:border-blue-500 focus:ring-blue-500 p-2 ${
+                errors.postalCode ? "border-red-500" : "border-gray-300"
+              }`}
             />
+            {errors.postalCode && (
+              <p className="text-red-500 text-xs mt-1">{errors.postalCode}</p>
+            )}
           </div>
 
           <div>
@@ -213,12 +316,18 @@ console.log(`city : ${city.id}`)
               </span>
               <input
                 type="text"
-                placeholder="مثال: ۰۹۱۲۳۴۵۶۷"
+                placeholder="مثال: 02123456789"
                 value={formData.telNumber}
                 onChange={(e) => handleChange("telNumber", e.target.value)}
-                className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 pl-16 p-2"
+                maxLength={11}
+                className={`mt-1 block w-full rounded-md border shadow-sm focus:border-blue-500 focus:ring-blue-500 pl-16 p-2 ${
+                  errors.telNumber ? "border-red-500" : "border-gray-300"
+                }`}
               />
             </div>
+            {errors.telNumber && (
+              <p className="text-red-500 text-xs mt-1">{errors.telNumber}</p>
+            )}
           </div>
 
           <div className="col-span-full">
@@ -226,12 +335,17 @@ console.log(`city : ${city.id}`)
               آدرس <span className="text-red-500">*</span>
             </label>
             <textarea
-              placeholder="آدرس را وارد کنید"
+              placeholder="  آدرس را وارد کنید (مثال: خیابان انقلاب ...) "
               value={formData.address}
               onChange={(e) => handleChange("address", e.target.value)}
               rows={3}
-              className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 p-2"
+              className={`mt-1 block w-full rounded-md border shadow-sm focus:border-blue-500 focus:ring-blue-500 p-2 ${
+                errors.address ? "border-red-500" : "border-gray-300"
+              }`}
             />
+            {errors.address && (
+              <p className="text-red-500 text-xs mt-1">{errors.address}</p>
+            )}
           </div>
         </div>
 

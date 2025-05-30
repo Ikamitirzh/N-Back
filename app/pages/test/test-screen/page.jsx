@@ -16,20 +16,20 @@ export default function TestScreen() {
 
   const [terms, setTerms] = useState([]);
   const [currentTermIndex, setCurrentTermIndex] = useState(0);
-  const [timeLeft, setTimeLeft] = useState(3);
+  const [timeLeft, setTimeLeft] = useState(10);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const [imageTransition, setImageTransition] = useState(false);
   const timerRef = useRef(null);
   const startTimeRef = useRef(null);
+  const timeUpHandled = useRef(false); // افزودن یک ref برای پیگیری اجرای handleTimeUp
 
-  // دریافت سوالات آزمون
   useEffect(() => {
     const fetchTerms = async () => {
       try {
         const response = await authApiClient.get(`${BASE_URL}/api/v1/WorkingMemoryTerms/${testId}`);
         setTerms(response.data);
-        // پیدا کردن اولین سوال بدون پاسخ
+
         const firstUnanswered = response.data.findIndex(term => term.userResponseDetails === null);
         setCurrentTermIndex(firstUnanswered >= 0 ? firstUnanswered : 0);
       } catch (err) {
@@ -43,24 +43,25 @@ export default function TestScreen() {
     fetchTerms();
   }, [testId]);
 
-  // مدیریت تایمر و تغییر سوال
+
   useEffect(() => {
     if (loading || !terms.length) return;
 
     const currentTerm = terms[currentTermIndex];
     const isAnswered = currentTerm?.userResponseDetails !== null;
 
-    // انیمیشن تغییر تصویر
     setImageTransition(true);
     const transitionTimer = setTimeout(() => setImageTransition(false), 500);
+    timeUpHandled.current = false; // ریست کردن فلگ در هر بار تغییر currentTermIndex
 
     if (!isAnswered) {
       startTimeRef.current = new Date().getTime();
       setTimeLeft(3);
-      
+
       timerRef.current = setInterval(() => {
         setTimeLeft(prev => {
-          if (prev <= 1) {
+          if (prev <= 1 && !timeUpHandled.current) {
+            timeUpHandled.current = true; // علامت بزنید که handleTimeUp اجرا شده
             handleTimeUp();
             return 0;
           }
@@ -75,7 +76,7 @@ export default function TestScreen() {
     };
   }, [currentTermIndex, terms, loading]);
 
-  // انصراف از آزمون
+
   const cancelTest = async () => {
     try {
       await authApiClient.delete(`${BASE_URL}/api/v1/WorkingMemoryResponses/${testId}`);
@@ -85,7 +86,7 @@ export default function TestScreen() {
     }
   };
 
-  // ارسال پاسخ به سرور
+
   const submitResponse = async (isTarget) => {
     const currentTerm = terms[currentTermIndex];
     if (!currentTerm || currentTerm.userResponseDetails !== null) return;
@@ -100,7 +101,7 @@ export default function TestScreen() {
         responseTime
       });
 
-      // به روزرسانی وضعیت محلی
+      console.log(`current term answer: ${currentTerm.id}`)
       const updatedTerms = [...terms];
       updatedTerms[currentTermIndex] = {
         ...currentTerm,
@@ -112,14 +113,14 @@ export default function TestScreen() {
       };
       setTerms(updatedTerms);
 
-      // رفتن به سوال بعدی
+
       goToNextTerm();
     } catch (err) {
       console.error('Error submitting response:', err);
     }
   };
 
-  // وقتی زمان پاسخ تمام شود
+
   const handleTimeUp = () => {
     clearInterval(timerRef.current);
     const currentTerm = terms[currentTermIndex];
@@ -127,10 +128,11 @@ export default function TestScreen() {
     if (currentTerm?.userResponseDetails === null) {
       authApiClient.post(`${BASE_URL}/api/v1/WorkingMemoryResponses/${testId}`, {
         termId: currentTerm.id,
-        responseTime: 3000 // حداکثر زمان پاسخ
+        responseTime: 3000
       });
+      console.log(`current term time out: ${currentTerm.id}`)
 
-      // به روزرسانی وضعیت محلی
+
       const updatedTerms = [...terms];
       updatedTerms[currentTermIndex] = {
         ...currentTerm,
@@ -146,11 +148,11 @@ export default function TestScreen() {
     goToNextTerm();
   };
 
-  // رفتن به سوال بعدی
+
   const goToNextTerm = () => {
     clearInterval(timerRef.current);
-    
-    // پیدا کردن سوال بعدی بدون پاسخ
+
+
     const nextUnanswered = terms.findIndex(
       (term, index) => index > currentTermIndex && term.userResponseDetails === null
     );
@@ -158,7 +160,7 @@ export default function TestScreen() {
     if (nextUnanswered >= 0) {
       setCurrentTermIndex(nextUnanswered);
     } else {
-      // اگر همه سوالات پاسخ داده شده‌اند
+
       router.push(`/pages/test/test-results?id=${testId}&type=${testType}`);
     }
   };
@@ -187,22 +189,22 @@ export default function TestScreen() {
   return (
     <div className="min-h-screen flex flex-col items-center justify-center bg-gray-50 p-4 relative ">
       <div className="absolute inset-0 z-0">
-              <img
-                src="/background.png"
-                alt="Background"
-                className="w-full h-full object-cover"
-              />
+            <img
+              src="/background.png"
+              alt="Background"
+              className="w-full h-full object-cover"
+            />
 
-            </div>
-      {/* دکمه انصراف */}
+          </div>
+
       <button
         onClick={cancelTest}
-        className="absolute top-4 right-4 px-4 py-2   text-red-600 rounded-md text-sm"
+        className="absolute top-4 right-4 px-4 py-2    text-red-600 rounded-md text-sm"
       >
         انصراف از آزمون
       </button>
 
-      {/* نوار پیشرفت زمان */}
+
       <div className="w-full bg-gray-200 rounded-full h-4 mb-6 max-w-md z-10">
         <div
           className="bg-blue-500 h-4 rounded-full transition-all duration-1000 ease-linear"
@@ -210,7 +212,7 @@ export default function TestScreen() {
         ></div>
       </div>
 
-      {/* نمایش تصویر سوال با انیمیشن */}
+
       <div className="flex justify-center mb-8 h-64 z-10">
         {currentTerm.picturePath && (
           <div className={`relative w-full max-w-md ${imageTransition ? 'animate-pulse' : ''}`}>
@@ -221,13 +223,13 @@ export default function TestScreen() {
               className={`object-contain transition-opacity duration-500 ${
                 imageTransition ? 'opacity-50' : 'opacity-100'
               }`}
-             
+
             />
           </div>
         )}
       </div>
 
-      {/* دکمه‌های پاسخ (فقط اگر پاسخ داده نشده و سوال اول نیست) */}
+
       {showResponseButtons && (
         <div className="flex justify-center space-x-4 mb-6 z-10 mt-5">
           <button
@@ -245,7 +247,7 @@ export default function TestScreen() {
         </div>
       )}
 
-      {/* نمایش وضعیت برای سوال اول یا سوالات پاسخ داده شده */}
+
       {(isFirstQuestion || isAnswered) && (
         <div className="text-center mb-6 z-10">
           <p className="text-gray-600">

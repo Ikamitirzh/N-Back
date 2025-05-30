@@ -4,11 +4,11 @@ import Link from 'next/link';
 import clsx from 'clsx';
 import { useRouter } from 'next/navigation';
 import { FaChartBar, FaSchool } from 'react-icons/fa';
-import { useAuth } from "../../hooks/useAuth"; // اضافه کردن Hook useAuth
+import { useAuth } from "../../hooks/useAuth"; 
 
 export default function Sidebar() {
   const router = useRouter();
-   const { adminLogout } = useAuth(); // استفاده از Hook useAuth
+   const { adminLogout } = useAuth(); 
 
 
   const handleLogout = async () => {
@@ -38,7 +38,7 @@ export default function Sidebar() {
 
         <div className="mt-auto mb-4 ml-5">
           <button
-            onClick={handleLogout} // استفاده از تابع logout
+            onClick={handleLogout} 
             className="w-full py-3 px-4 text-blue-100 hover:bg-blue-500 rounded-l-lg text-right hover:text-white transition hover:border-r-2 hover:border-white flex items-center justify-start"
           >
             <LogOut size={18} className="text-red-500 ml-1" />

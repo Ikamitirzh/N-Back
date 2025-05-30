@@ -10,7 +10,7 @@ const ManagerLogin = () => {
   const [showForm, setShowForm] = useState(false);
   const [mobileNumber, setMobileNumber] = useState("");
 
-  // توابع API مخصوص مدیر
+  
   const handleSendOtp = async (mobile: string) => {
     const response = await axios.post(
       `${process.env.NEXT_PUBLIC_API_URL}/api/v1/Auth/send-otp`,

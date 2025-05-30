@@ -22,7 +22,7 @@ export default function ComboBox({
   const comboBoxRef = useRef(null);
   const inputRef = useRef(null);
 
-  // مدیریت باز و بسته شدن dropdown
+  
   const toggleDropdown = () => {
     if (!disabled) {
       setIsOpen(!isOpen);
@@ -32,7 +32,7 @@ export default function ComboBox({
     }
   };
 
-  // بستن dropdown هنگام کلیک خارج
+  
   useEffect(() => {
     const handleClickOutside = (event) => {
       if (comboBoxRef.current && !comboBoxRef.current.contains(event.target)) {
@@ -44,7 +44,7 @@ export default function ComboBox({
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, []);
 
-  // دریافت داده‌ها فقط هنگام باز شدن کمبوباکس
+  
     useEffect(() => {
     if (isOpen && !disabled) {
         const fetchData = async () => {
@@ -61,9 +61,9 @@ export default function ComboBox({
         }
         };
 
-        fetchData(); // بدون setTimeout
+        fetchData(); 
     }
-    }, [isOpen, disabled,searchTerm]); // فقط وابسته به isOpen و disabled
+    }, [isOpen, disabled,searchTerm]); 
 
   const handleSelect = (option) => {
     onChange(option);

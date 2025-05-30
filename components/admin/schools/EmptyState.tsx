@@ -1,5 +1,5 @@
 interface EmptyStateProps {
-  onAddNew?: () => void; // اضافه کردن prop اختیاری
+  onAddNew?: () => void; 
 }
 
 export default function EmptyState({ onAddNew }: EmptyStateProps) {

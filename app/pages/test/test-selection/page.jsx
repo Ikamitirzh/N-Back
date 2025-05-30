@@ -11,18 +11,18 @@ export default function TestSelection() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const { authApiClient, user, isLoading: authLoading } = useAuth();
+  console.log(tests)
   
-  // اگر کاربر لاگین نکرده باشد، به صفحه لاگین هدایت شود
   useEffect(() => {
     if (!authLoading && !user) {
       router.push('/userLogin');
     }
   }, [user, authLoading, router]);
 
-  // دریافت لیست آزمون‌ها
+  
   useEffect(() => {
     const fetchTests = async () => {
-      if (!user) return; // اگر کاربر لاگین نکرده باشد، درخواست ارسال نشود
+      if (!user) return; 
       
       try {
         setLoading(true);
@@ -32,7 +32,7 @@ export default function TestSelection() {
         console.error('Error fetching tests:', err);
         setError('خطا در دریافت آزمون‌ها. لطفاً دوباره تلاش کنید.');
         if (err.response?.status === 401) {
-          router.push('/userLogin'); // اگر توکن نامعتبر بود به صفحه لاگین هدایت شود
+          router.push('/userLogin'); 
         }
       } finally {
         setLoading(false);
@@ -66,7 +66,9 @@ export default function TestSelection() {
   };
 
   const sortedTests = [...tests].sort((a, b) => a.order - b.order);
-
+  
+  let str = JSON.stringify(sortedTests, null, 4);
+  console.log(`sortedTests: ${str}`)
   if (authLoading) {
     return (
       <div className="min-h-screen flex items-center justify-center">

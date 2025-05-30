@@ -23,6 +23,7 @@ export default function SchoolManagementPage() {
     cityName: "",
   });
   
+  
 
   const [searchQuery, setSearchQuery] = useState("");
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
@@ -35,10 +36,10 @@ export default function SchoolManagementPage() {
   postalCode: "",
   telNumber: "",
   level: 0,
-  provinceId: null, // تغییر از 1 به null
-  cityId: null,     // تغییر از 1 به null
-  provinceDetail: null, // اضافه کردن این فیلد
-  cityDetail: null      // اضافه کردن این فیلد
+  provinceId: null, 
+  cityId: null,     
+  provinceDetail: null, 
+  cityDetail: null      
 });
 
     console.log(JSON.stringify(selectedSchool, null, 2));
@@ -108,7 +109,7 @@ export default function SchoolManagementPage() {
   setSelectedSchool({
     ...school,
     level: parseInt(school.level) || 0,
-    // اضافه کردن مقادیر اولیه برای ویرایش
+    
     provinceId: school.provinceDetail?.id || null,
     cityId: school.cityDetail?.id || null,
     provinceName: school.provinceDetail?.name || "",
@@ -122,7 +123,7 @@ export default function SchoolManagementPage() {
       const schoolDetails = await getSchoolDetails(schoolId);
       setSelectedSchool({
         ...schoolDetails,
-        level: parseInt(schoolDetails.level) || 0, // مطمئن می‌شیم که level یه عدد باشه
+        level: parseInt(schoolDetails.level) || 0, 
       });
       setIsDetailsModalOpen(true);
     } catch (error) {
@@ -209,6 +210,7 @@ export default function SchoolManagementPage() {
               </div>
             </div>
           </div>
+          
           <table className="min-w-full divide-y divide-gray-200">
             <thead className="bg-gray-50">
               <tr>
@@ -238,7 +240,7 @@ export default function SchoolManagementPage() {
                     <button
                       onClick={() => openDetailsModal(school.id)}
                       title="مشاهده"
-                      className="p-2 bg-[var(--Primary-100)] text-blue-400 rounded-full hover:bg-blue-600 hover:text-white transition"
+                      className="p-2 bg-[var(--Primary-100)] text-blue-400 rounded-md hover:bg-blue-600 hover:text-white transition"
                     >
                       <svg
                         xmlns="http://www.w3.org/2000/svg"
@@ -263,7 +265,7 @@ export default function SchoolManagementPage() {
                     <button
                       onClick={() => openEditModal(school)}
                       title="ویرایش"
-                      className="p-2 bg-[var(--Warning-3)] text-[var(--Warning-2)] rounded-full hover:bg-yellow-500 hover:text-white transition"
+                      className="p-2 bg-[var(--Warning-3)] text-[var(--Warning-2)] rounded-md hover:bg-yellow-500 hover:text-white transition"
                     >
                       <svg
                         xmlns="http://www.w3.org/2000/svg"
@@ -283,7 +285,7 @@ export default function SchoolManagementPage() {
                     <button
                       onClick={() => handleDeleteSchool(school.id)}
                       title="حذف"
-                      className="p-2 bg-red-200 text-red-400 rounded-full hover:bg-red-400 hover:text-white transition"
+                      className="p-2 bg-red-200 text-red-400 rounded-md hover:bg-red-400 hover:text-white transition"
                     >
                       <svg
                         xmlns="http://www.w3.org/2000/svg"
@@ -341,6 +343,15 @@ export default function SchoolManagementPage() {
     school={selectedSchool}
   />
 )}
+
+{isDetailsModalOpen && (
+          <SchoolDetailsModal
+            isOpen={isDetailsModalOpen}
+            onClose={() => setIsDetailsModalOpen(false)}
+            school={selectedSchool}
+            className=""
+          />
+        )}
       </div>
     </div>
   );

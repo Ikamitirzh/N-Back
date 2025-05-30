@@ -47,7 +47,7 @@ const ManagerForm = ({
       <h1 className="text-2xl font-bold text-center mb-6">تکمیل اطلاعات</h1>
       
       <form onSubmit={handleSubmit}>
-        {/* فیلدهای دقیقاً مشابه تصویر شما */}
+        
         <div className="mb-4">
           <label className="block font-semibold mb-1 text-gray-700">نام*</label>
           <input

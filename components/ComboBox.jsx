@@ -1,7 +1,7 @@
 // ComboBox.jsx
 import  { useState, useEffect } from "react";
 import { useAuth } from "../hooks/useAuth";
-const BASE_URL = "https://localhost:7086"; // تغییر داده شود به صورت واقعی
+const BASE_URL = "https://localhost:7086"; 
 
 export default function ComboBox({
   label,
@@ -19,7 +19,7 @@ export default function ComboBox({
   const [internalValue, setInternalValue] = useState(null);
   // Sync selectedValue with selectedOption
    useEffect(() => {
-  // فقط اگر selectedValue تغییر کرد و با internalValue متفاوت بود، آپدیت کنیم
+  
   if (selectedValue && (!internalValue || selectedValue.id !== internalValue.id)) {
     setInternalValue(selectedValue);
     setSearchTerm(selectedValue.name);
@@ -44,14 +44,14 @@ export default function ComboBox({
   }, [isOpen, searchTerm, apiEndpoint, disabled]);
 
   const filteredOptions = options.filter((option) =>
-    option.name?.toLowerCase().includes(searchTerm.toLowerCase())
+    option.name?.toLowerCase().includes(searchTerm?.toLowerCase())
   );
 
   const handleInputClick = () => {
     if (!disabled) {
       setIsOpen(!isOpen);
       if (!searchTerm && !selectedOption) {
-        setSearchTerm(""); // برای نمایش تمامی استان/شهر
+        setSearchTerm(""); 
       }
     }
   };
@@ -60,7 +60,7 @@ const handleSelect = (option) => {
   setInternalValue(option);
   setSearchTerm(option.name);
   if (onChange) {
-    // ارسال کل object انتخاب شده به جای فقط مقدار
+   
     onChange({
       id: option.id,
       name: option.name
@@ -79,10 +79,10 @@ const handleSelect = (option) => {
       <input
         type="text"
         placeholder={`انتخاب ${label}`}
-        value={internalValue?.name || searchTerm}
+        value={internalValue?.name || searchTerm }
         onClick={handleInputClick}
         readOnly
-        className={`w-full p-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white ${
+        className={`w-full p-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 ${className} ${
           disabled ? "bg-gray-100 cursor-not-allowed" : ""
         }`}
         onChange={(e) => setSearchTerm(e.target.value)}

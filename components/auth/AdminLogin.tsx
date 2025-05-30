@@ -6,7 +6,7 @@ import axios from "axios";
 const AdminLogin = () => {
   const router = useRouter();
 
-  // توابع API مطابق Swagger
+  
   const handleSendOtp = async (mobile: string) => {
     const response = await axios.post(
       `${process.env.NEXT_PUBLIC_API_URL}/api/v1/admin/Auth/send-otp`,
@@ -32,7 +32,7 @@ const AdminLogin = () => {
   };
 
   const handleSuccess = (token: string) => {
-    // ذخیره توکن و ریدایرکت
+    
     localStorage.setItem("adminToken", token);
     router.push("/admin/dashboard");
   };
