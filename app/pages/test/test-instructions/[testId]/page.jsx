@@ -19,8 +19,9 @@ export default function TestInstructions() {
 
   
   const testType = searchParams.get('type'); 
+  const testStatuse = searchParams.get('status'); 
 
-  console.log(`testId: ${testId}, testType: ${testType}`);
+  console.log(`testId: ${testId}, testType: ${testType}, testStatuse: ${testStatuse}`);
 
   const [instructions, setInstructions] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -88,7 +89,7 @@ const playAudio = () => {
 
   
   const startTest = () => {
-    router.push(`/pages/test/test-screen?id=${testId}&type=${testType}`);
+    router.push(`/pages/test/test-screen?id=${testId}&type=${testType}&status=${testStatuse}`);
   };
 
   

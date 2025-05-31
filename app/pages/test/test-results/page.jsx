@@ -92,23 +92,23 @@ export default function TestResults() {
 
         <div className="space-y-4 mb-8">
           <div className="flex justify-between items-center mx-15  pb-2">
+            <span className="font-larg">پاسخ‌های صحیح:</span>
             <span className="text-green-600 font-larg font-bold">{results.correctAnswers}</span>
-            <span className="font-larg">:پاسخ‌های صحیح</span>
           </div>
 
           <div className="flex justify-between items-center mx-15 pb-2">
+            <span className="font-larg">پاسخ‌های نادرست:</span>
             <span className="text-red-600 font-larg font-bold">{results.incorrectAnswers}</span>
-            <span className="font-larg">:پاسخ‌های نادرست</span>
           </div>
 
           <div className="flex justify-between items-center mx-15  pb-2">
+            <span className="font-larg">پاسخ داده نشده:</span>
             <span className="text-yellow-600 font-larg font-bold">{results.unansweredTerms}</span>
-            <span className="font-larg">:پاسخ داده نشده</span>
           </div>
 
           <div className="flex justify-between items-center mx-15 pb-2">
+            <span className="font-larg">کل سوالات:</span>
             <span className="text-blue-600 font-larg font-bold">{results.totalTerms}</span>
-            <span className="font-larg">:کل سوالات</span>
           </div>
         </div>
 

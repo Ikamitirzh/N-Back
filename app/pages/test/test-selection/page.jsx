@@ -61,8 +61,8 @@ export default function TestSelection() {
     }
   };
 
-  const startTest = (testId, testType) => {
-    router.push(`/pages/test/test-instructions/${testId}?type=${testType}`);
+  const startTest = (testId, testType, testStatuse) => {
+    router.push(`/pages/test/test-instructions/${testId}?type=${testType}&status=${testStatuse}`);
   };
 
   const sortedTests = [...tests].sort((a, b) => a.order - b.order);
@@ -109,7 +109,7 @@ export default function TestSelection() {
               return (
                 <div
                   key={test.id}
-                  onClick={() => !status.disabled && startTest(test.id, test.type)}
+                  onClick={() => !status.disabled && startTest(test.id, test.type, test.status)}
                   className={`border rounded-lg p-4 transition-all duration-200 ${
                     status.disabled
                       ? 'bg-gray-50 cursor-not-allowed'
