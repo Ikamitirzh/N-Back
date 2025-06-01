@@ -51,7 +51,7 @@ export default function TestScreen() {
         if (currentStatus === 1 && !sessionCreated.current) {
           sessionCreated.current = true;
           try {
-            await authApiClient.post(`${BASE_URL}/api/v1/UserTestSession/${testId}`);
+            await authApiClient.post(`${BASE_URL}/api/v1/UserTestSessions/${testId}`);
             console.log("Session created");
             await fetchTestStatus();
           } catch (sessionError) {
@@ -129,7 +129,7 @@ export default function TestScreen() {
     try {
       setLoading(true);
       setError('');
-      const response = await authApiClient.get(`${BASE_URL}/api/v1/UserTestSession/${numericTestId}`);
+      const response = await authApiClient.get(`${BASE_URL}/api/v1/UserTestSessions/${numericTestId}`);
 
       if (response.data.isCompleted) {
         if (testType === '2') {
@@ -140,7 +140,7 @@ export default function TestScreen() {
       } else {
         const newTermsWereLoaded = await fetchMoreTerms();
         if (!newTermsWereLoaded) {
-          const finalStatusResponse = await authApiClient.get(`${BASE_URL}/api/v1/UserTestSession/${numericTestId}`);
+          const finalStatusResponse = await authApiClient.get(`${BASE_URL}/api/v1/UserTestSessions/${numericTestId}`);
           if (finalStatusResponse.data.isCompleted) {
             router.push(`/pages/test/test-results?id=${numericTestId}&type=${testType}`);
           } else {
@@ -193,7 +193,7 @@ export default function TestScreen() {
 
   const cancelTest = async () => {
     try {
-      await authApiClient.delete(`${BASE_URL}/api/v1/UserTestSession/${testId}`);
+      await authApiClient.delete(`${BASE_URL}/api/v1/UserTestSessions/${testId}`);
       router.push('/pages/test/test-selection');
     } catch (err) {
       console.error('Error cancelling test:', err);
