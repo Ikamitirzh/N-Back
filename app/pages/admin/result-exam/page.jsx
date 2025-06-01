@@ -16,10 +16,10 @@ export default function TestResultsPage() {
   const [students, setStudents] = useState([]);
   const [filters, setFilters] = useState({
     'Pagination.PageIndex': 1,
-    'Pagination.PageSize': 7,
+    'Pagination.PageSize': 5,
     SearchTerm: "",
     IsRightHanded: null, // null برای همه، true برای راست‌دست، false برای چپ‌دست
-    TestType: null, // null برای همه
+    TestType: 0, // null برای همه
   });
 
   const [totalPages, setTotalPages] = useState(1);
@@ -102,17 +102,17 @@ export default function TestResultsPage() {
             {/* انتخاب نوع آزمون */}
             <div className="flex-1 min-w-[150px]">
               <select
-                value={filters.TestType === null ? "" : filters.TestType}
+                value={filters.TestType === null ? "0" : filters.TestType}
                 onChange={(e) => {
                   const value = e.target.value;
                   setFilters({
                     ...filters,
-                    TestType: value === "" ? null : parseInt(value),
+                    TestType: value === "0" ? null : parseInt(value),
                   });
                 }}
                 className="w-full py-2 bg-[var(--Bg-main)] px-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
               >
-                <option value="">همه</option>
+                
                 <option value="0">1-back</option>
                 <option value="1">2-back</option>
                 <option value="2">3-back</option>
@@ -135,6 +135,7 @@ export default function TestResultsPage() {
             <tbody className="bg-white divide-y divide-gray-200">
               {students.map((student, index) => (
                 <tr key={student.userTestSessionId} className={index % 2 === 0 ? 'bg-white' : 'bg-[var(--Bg-main)]'}>
+                  <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">{`${student.userTestSessionId} `}</td>
                   <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">{`${student.firstName} ${student.lastName}`}</td>
                   <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{student.phoneNumber}</td>
                   <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{student.age}</td>

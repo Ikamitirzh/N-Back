@@ -128,3 +128,70 @@ body {
   -ms-overflow-style: none;
   scrollbar-width: none;
 }
+
+
+
+/* انیمیشن بالا و پایین پریدن */
+@keyframes key-bounce {
+  0%, 100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-8px);
+  }
+}
+
+/* انیمیشن بالا و پایین پریدن */
+@keyframes key-bounce {
+  0%, 100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-8px);
+  }
+}
+
+/* استایل دکمه کیبورد */
+.keyboard-key {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  width: 60px;
+  height: 60px;
+  background: linear-gradient(145deg, #e6e6e6, #ffffff);
+  border: 2px solid #b3b3b3;
+  border-radius: 8px;
+  box-shadow: 
+    0 4px 6px rgba(0, 0, 0, 0.2),
+    inset 0 2px 3px rgba(255, 255, 255, 0.8),
+    inset 0 -2px 3px rgba(0, 0, 0, 0.2);
+  animation: key-bounce 2s infinite;
+  transition: transform 0.2s ease-in-out;
+}
+
+/* افکت فشار دادن دکمه */
+.keyboard-key:hover {
+  transform: translateY(2px);
+  box-shadow: 
+    0 2px 4px rgba(0, 0, 0, 0.2),
+    inset 0 1px 2px rgba(255, 255, 255, 0.8),
+    inset 0 -1px 2px rgba(0, 0, 0, 0.2);
+}
+
+/* متن روی دکمه */
+.key-label {
+  font-family: "Courier New", Courier, monospace;
+  font-size: 1.5rem;
+  font-weight: bold;
+  color: #333;
+  text-transform: uppercase;
+}
+
+/* متن توضیح زیر دکمه */
+.key-action {
+  font-family: "Courier New", Courier, monospace;
+  font-size: 0.8rem;
+  color: #555;
+  margin-top: 4px;
+}

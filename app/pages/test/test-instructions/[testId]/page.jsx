@@ -103,102 +103,104 @@ const playAudio = () => {
   };
 
   return (
-    <div className="min-h-screen flex flex-col items-center justify-center bg-gray-50 relative overflow-hidden">
-      {/* Background Image */}
-      <div className="absolute inset-0 z-0">
-        <Image
-          src="/background.png"
-          alt="Background"
-          fill
-          className="object-cover"
-          quality={100}
-          priority
-        />
-      </div>
+    <div className="min-h-screen flex flex-col items-center justify-center bg-gray-50 relative overflow-hidden px-4 sm:px-0">
+  {/* پس‌زمینه */}
+  <div className="absolute inset-0 z-0">
+    <Image
+      src="/background.png"
+      alt="Background"
+      fill
+      className="object-cover"
+      quality={100}
+      priority
+    />
+  </div>
 
-     
-      <h1 className="text-3xl font-bold text-center mb-6 text-blue-600  z-10"> {getTestName()} قوانین</h1>
+  {/* عنوان */}
+  <h1 className="text-2xl sm:text-3xl font-bold text-center mt-6 sm:mt-0 mb-6 text-blue-600 z-10">
+    {getTestName()} قوانین
+  </h1>
 
-      {/* Content Container */}
-      <div className="relative z-10 bg-white bg-opacity-90 rounded-lg shadow-xl p-8 max-w-150 w-full mx-4 my-7 rtl">
-       
-        <div className="flex justify-start mb-6">
-          <button
-            onClick={playAudio}
-            disabled={!instructions?.audioPath}
-            className={`flex items-center px-3 py-3 rounded-full bg-orange-400 ${
-              instructions?.audioPath 
-                ? 'bg-blue-500 hover:bg-blue-600 text-white' 
-                : 'bg-gray-200 text-gray-100 cursor-not-allowed'
-            }`}
-          >
-            {isPlaying ? (
-  <>
-    <span className="ml-2">در حال پخش...</span>
-    <FaPlay className="" />
-  </>
-) : (
-  <>
-    <FaVolumeUp className="" />
+  {/* جعبه محتوا */}
+  <div className="relative z-10 bg-white bg-opacity-90 rounded-lg shadow-xl p-4 sm:p-8 w-full max-w-md sm:max-w-150 mx-auto my-7 rtl">
     
-  </>
-)}
+    {/* دکمه صوت */}
+    <div className="flex justify-center sm:justify-start mb-6">
+      <button
+        onClick={playAudio}
+        disabled={!instructions?.audioPath}
+        className={`flex items-center px-4 sm:px-3 py-2 sm:py-3 rounded-full transition bg-orange-400 ${
+          instructions?.audioPath
+            ? 'bg-blue-500 hover:bg-blue-600 text-white'
+            : 'bg-gray-200 text-gray-100 cursor-not-allowed'
+        }`}
+      >
+        {isPlaying ? (
+          <>
+            <span className="ml-2 text-sm sm:text-base">در حال پخش...</span>
+            <FaPlay />
+          </>
+        ) : (
+          <>
+            <FaVolumeUp className={`${instructions?.audioPath ? 'text-white' : 'text-gray-400'}`} />
+          </>
+        )}
+      </button>
+    </div>
 
-          </button>
+    {/* توضیحات */}
+    <div className="max-h-64 overflow-y-auto mb-6 custom-scrollbar">
+      {loading ? (
+        <div className="flex justify-center">
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-500"></div>
         </div>
-
-        
-        <div className="max-h-64 overflow-y-auto mb-6 custom-scrollbar">
-          {loading ? (
-            <div className="flex justify-center">
-              <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-500"></div>
+      ) : error ? (
+        <div className="text-red-500 text-center mb-4">{error}</div>
+      ) : (
+        <div className="prose prose-sm text-right px-1 sm:px-2">
+          {instructions?.description ? (
+            <div dir="rtl">
+              {instructions.description.split('\n').map((paragraph, index) => (
+                <p key={index} className="mb-4 text-sm sm:text-base leading-relaxed">
+                  {paragraph}
+                </p>
+              ))}
             </div>
-          ) : error ? (
-            <div className="text-red-500 text-center mb-4">{error}</div>
           ) : (
-            <div className="prose prose-sm text-right px-2">
-              {instructions?.description ? (
-                <div dir="rtl">
-                  {instructions.description.split('\n').map((paragraph, index) => (
-                    <p key={index} className="mb-4">{paragraph}</p>
-                  ))}
-                </div>
-              ) : (
-                <div className="text-gray-500 text-center">راهنمای آزمون موجود نیست</div>
-              )}
-            </div>
+            <div className="text-gray-500 text-center">راهنمای آزمون موجود نیست</div>
           )}
         </div>
-
-        
-        <div className="pt-4 border-t border-gray-200 text-center">
-          <button
-            onClick={startTest}
-            className="px-55 py-2  bg-blue-500 hover:bg-blue-600 text-white rounded-md font-medium flex items-center mx-auto"
-          >
-           
-            شروع آزمون
-          </button>
-        </div>
-      </div>
-
-      
-      <style jsx>{`
-        .custom-scrollbar::-webkit-scrollbar {
-          width: 6px;
-        }
-        .custom-scrollbar::-webkit-scrollbar-track {
-          background: #f1f1f1;
-          border-radius: 10px;
-        }
-        .custom-scrollbar::-webkit-scrollbar-thumb {
-          background: #888;
-          border-radius: 10px;
-        }
-        .custom-scrollbar::-webkit-scrollbar-thumb:hover {
-          background: #555;
-        }
-      `}</style>
+      )}
     </div>
+
+    {/* دکمه شروع */}
+    <div className="pt-4 border-t border-gray-200 text-center">
+      <button
+        onClick={startTest}
+        className="w-full sm:w-auto px-4 py-2 sm:px-55 bg-blue-500 hover:bg-blue-600 text-white rounded-md font-medium flex items-center justify-center mx-auto text-sm sm:text-base"
+      >
+        شروع آزمون
+      </button>
+    </div>
+  </div>
+
+  <style jsx>{`
+    .custom-scrollbar::-webkit-scrollbar {
+      width: 6px;
+    }
+    .custom-scrollbar::-webkit-scrollbar-track {
+      background: #f1f1f1;
+      border-radius: 10px;
+    }
+    .custom-scrollbar::-webkit-scrollbar-thumb {
+      background: #888;
+      border-radius: 10px;
+    }
+    .custom-scrollbar::-webkit-scrollbar-thumb:hover {
+      background: #555;
+    }
+  `}</style>
+</div>
+
   );
 }
