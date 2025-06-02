@@ -3,9 +3,9 @@ import { LogOut } from 'lucide-react';
 import Link from 'next/link';
 import clsx from 'clsx';
 import { useRouter, usePathname } from 'next/navigation'; // usePathname رو اضافه می‌کنیم
-import { FaChartBar, FaSchool } from 'react-icons/fa';
+import { FaChartBar, FaSchool} from 'react-icons/fa';
 import { useAuth } from "../../hooks/useAuth"; 
-
+import {  TrendingUp } from "lucide-react";
 export default function Sidebar() {
   const router = useRouter();
   const pathname = usePathname(); // مسیر فعلی رو می‌گیره
@@ -24,6 +24,7 @@ export default function Sidebar() {
   const navItems = [
     { label: "مدیریت مدارس", path: "/pages/admin/schools", icon: <FaSchool className="ml-2" /> },
     { label: "گزارش آزمون", path: "/pages/admin/result-exam", icon: <FaChartBar className="ml-2" /> },
+    { label: "تحلیل آزمون", path: "/pages/admin/exam-analysis", icon: <TrendingUp className="ml-2" /> },
   ];
 
   return (

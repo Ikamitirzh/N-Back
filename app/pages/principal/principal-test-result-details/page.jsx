@@ -6,8 +6,8 @@ import { useRouter, useSearchParams } from "next/navigation";
 import Image from 'next/image'; // برای تصویر پس‌زمینه
 import { ChevronLeft, CheckCircle, XCircle, MinusCircle, RefreshCw, Eye } from "lucide-react";
 import Sidebar from "../../../../components/admin/Sidebar"; // مسیر Sidebar خودتان
-import Header from "../../../../components/admin/Header";   // مسیر Header خودتان
-import { useAuth } from "../../../../hooks/useAuth";     // مسیر useAuth خودتان
+import Header from "../../../../components/admin/Header";  // مسیر Header خودتان
+import { useAuth } from "../../../../hooks/useAuth";    // مسیر useAuth خودتان
 
 const BASE_URL = "https://localhost:7086"; // آدرس بک‌اند شما
 
@@ -150,6 +150,7 @@ export default function AdminTestResultDetailsPage() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const sessionId = searchParams.get("userTestSessionId"); 
+  const schoolId = searchParams.get("schoolId"); 
   const { authApiClient } = useAuth();
 
   const [responses, setResponses] = useState([]);
@@ -168,8 +169,13 @@ export default function AdminTestResultDetailsPage() {
     setError('');
 
     try {
-      const responsesPromise = authApiClient.get(`${BASE_URL}/api/v1/admin/WorkingMemoryResponses/${sessionId}`);
-      const chartPromise = authApiClient.get(`${BASE_URL}/api/v1/admin/WorkingMemoryResponses/${sessionId}/accuracy-chart`);
+      const responsesPromise = authApiClient.get(`${BASE_URL}/api/v1/school-principal/WorkingMemoryResponses/${sessionId}`, {
+        params: { schoolId }
+        });
+
+      const chartPromise = authApiClient.get(`${BASE_URL}/api/v1/school-principal/WorkingMemoryResponses/${sessionId}/accuracy-chart`,{
+        params: { schoolId }
+        });
 
       const [responsesResult, chartResult] = await Promise.all([responsesPromise, chartPromise]);
       
@@ -200,7 +206,7 @@ export default function AdminTestResultDetailsPage() {
             جزئیات آزمون {chartData?.userFullName ? ` برای ${chartData.userFullName}` : ''}
           </h2>
           <button
-            onClick={() => router.push('/pages/admin/result-exam')} // مسیر صفحه لیست اصلی نتایج
+            onClick={() => router.push(`/pages/principal/main?schoolId=${schoolId}`)} // مسیر صفحه لیست اصلی نتایج
             className="flex items-center bg-blue-600 hover:bg-blue-700 text-white text-xs sm:text-sm px-3 py-2 sm:px-4 sm:py-2.5 rounded-lg shadow hover:shadow-md transition-colors duration-150"
           >
             <ChevronLeft size={16} className="ml-1.5 transform rotate-180" />

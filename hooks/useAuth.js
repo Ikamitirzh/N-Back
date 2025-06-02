@@ -138,11 +138,12 @@ export const useAuth = () => {
         `${BASE_URL}/api/v1/school-principal/Auth/verify-otp`,
         { phoneNumber, otpCode }
       );
-      
-      const { token, isFirstLogin } = response.data;
+      console.log(response.data)
+      const { token, schoolId } = response.data;
+      console.log(schoolId)
       storeTokens(token.accessToken, token.refreshToken, "principal");
-      setIsFirstLogin(isFirstLogin);
-      return { isFirstLogin };
+      setIsFirstLogin(schoolId);
+      return { schoolId };
     } catch (error) {
       console.error("Error verifying OTP:", error);
       throw error;

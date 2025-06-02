@@ -85,11 +85,11 @@ const validateNumericInput = (value) => {
   const [timer, setTimer] = useState(0);
   
   // Flag for first-time login
-  const [isFirstLogin, setIsFirstLogin] = useState(false);
+ 
 
   // Refs for OTP input fields
   const otpInputs = useRef([]);
-  const { sendOtp, verifyOtp, adminLogin } = useAuth();
+  const { sendOtp, verifyOtp, adminLogin , isFirstLogin} = useAuth();
 
   /**
    * Fetches schools list when cityId changes
@@ -166,16 +166,16 @@ const validateNumericInput = (value) => {
   try {
     const otpCode = formData.otp.join("");
     const response = await verifyOtp(formData.phoneNumber, otpCode);
-    
-    if (!response.isFirstLogin) {
+   console.log(JSON.stringify(response))
+    if (response.schoolId) {
       // کاربر پروفایل را تکمیل کرده، مستقیماً به داشبورد با schoolId هدایت شود
-      const schoolId =  profileData.schoolId;
-      console.log(`schoolId: ${schoolId}`)
-      if (schoolId) {
-        router.push(`/pages/principal/main?schoolId=${schoolId}`);
+      
+      
+      if (response.schoolId) {
+        router.push(`/pages/principal/main?schoolId=${response.schoolId}`);
     } else {
       // کاربر پروفایل را تکمیل نکرده، فرم تکمیل پروفایل را نمایش بده
-      setIsFirstLogin(true);
+      
       setLoginMode("profile");
     }
   }} catch (error) {
@@ -292,7 +292,7 @@ const validateNumericInput = (value) => {
             <form onSubmit={handleSubmit}>
               <div>
                 <label htmlFor="phoneNumber" className="block font-semibold mb-1 text-gray-700">
-                  شماره موبایل
+                  نام کاربری
                 </label>
                 <div className="relative">
                   <input

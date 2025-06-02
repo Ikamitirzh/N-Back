@@ -135,7 +135,7 @@ export default function TestResultsPage() {
             <tbody className="bg-white divide-y divide-gray-200">
               {students.map((student, index) => (
                 <tr key={student.userTestSessionId} className={index % 2 === 0 ? 'bg-white' : 'bg-[var(--Bg-main)]'}>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">{`${student.userTestSessionId} `}</td>
+                  
                   <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">{`${student.firstName} ${student.lastName}`}</td>
                   <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{student.phoneNumber}</td>
                   <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{student.age}</td>
